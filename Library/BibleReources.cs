@@ -54,7 +54,7 @@ namespace Aionian
         public static BibleLink[] GetAllUrls()
         {
             string ResourceSite = @"http://resources.aionianbible.org/";//Address of the page where we are searching the links
-            var responsestring = new StreamReader((WebRequest.Create(ResourceSite).GetResponse()).GetResponseStream()).ReadToEnd();//The page containing a lot of things, but we are focused on the links
+            var responsestring = new StreamReader(WebRequest.Create(ResourceSite).GetResponse().GetResponseStream()).ReadToEnd();//The page containing a lot of things, but we are focused on the links
             Regex regex = new Regex(@"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia");//Using REGEX to fetch all links to Aionian/Standard Editions of bible in the page 
 			var links=new List<BibleLink>();//A list to store all the links
             foreach (Match match in regex.Matches(responsestring))//For every regex match
@@ -90,7 +90,7 @@ namespace Aionian
 				if(line[0]=='0')//The valid lines of the database do not begin with # or INDEX (header row)
 				{
 					var rows=line.Split('\t');//Returns the line after splitting into multiple rows
-					BibleBook book=(BibleBook)(byte)(System.Array.IndexOf(ShortBookNames,rows[1]));//Get the BibleBook from BookName
+					BibleBook book=(BibleBook)(byte)Array.IndexOf(ShortBookNames,rows[1]);//Get the BibleBook from BookName
 					var chapter=byte.Parse(rows[2]);//Get the Chapter number
 					var verseno=byte.Parse(rows[3]);//Get the Verse number
 					var verse=rows[4];//Get the verse content
@@ -119,6 +119,14 @@ namespace Aionian
 			}
 			return bible;
 		}
+		/// <summary>
+		/// This is an unofficial way to download the stream which can be further used to convert into the Bible Class object.
+		/// Needless to say, this is not the necessary way to download and should not be used if it does not meet 
+		/// any requiements of the developer.
+		/// </summary>
+		/// <param name="link">The bible link containing the URL</param>
+		/// <returns>The stream of the *.noia file is returned</returns>
+		public static StreamReader DownloadStream(this BibleLink link) => new StreamReader(HttpWebRequest.Create(link.URL).GetResponse().GetResponseStream());
     }
 	/// <summary>Represents a single link of an Aionian Bible</summary>
 	public struct BibleLink
