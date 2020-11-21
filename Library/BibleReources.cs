@@ -5,12 +5,12 @@ using System.Text.RegularExpressions;
 using System;
 namespace Aionian
 {
-    /// <summary>
-    /// Aionian Bible Descriptor. 
-    /// Provides the description/url for the bible resources provided by Aionian
-    /// </summary>
-    public static class ABD
-    {
+	/// <summary>
+	/// Aionian Bible Descriptor. 
+	/// Provides the description/url for the bible resources provided by Aionian
+	/// </summary>
+	public static class ABD
+	{
 		/// <summary>
 		/// Contains a list of Short Names of Books. The first index is NULL so as to match the enum BibleBook index and make its value interconvertible to this array's index
 		/// 
@@ -25,7 +25,7 @@ namespace Aionian
 		/// -------------------------------------------- 
 		/// </summary>
 		/// <value></value>
-		public static readonly string[] ShortBookNames=
+		public static readonly string[] ShortBookNames =
 		{
 			"",
 			"GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI",
@@ -35,35 +35,36 @@ namespace Aionian
 			"ROM","1CO","2CO","GAL","EPH","PHI","COL","1TH","2TH","1TI","2TI",
 			"TIT","PHM","HEB","JAM","1PE","2PE","1JO","2JO","3JO","JUD","REV"
 		};
-        /// <summary>
-        /// Returns the URL for downloads of Aionian bible for the given parameters. It is advised not to use this unless fully understood of the functionality. 
+		/// <summary>
+		/// Returns the URL for downloads of Aionian bible for the given parameters. It is advised not to use this unless fully understood of the functionality. 
 		/// 
 		/// It returns the URL such as http://resources.aionianbible.org/Holy-Bible---[lang]---[title]---Aionian-Edition.noia,
 		/// 
 		/// but does not ensure that placing the lang and title in the URL makes a valid existing URL or not
-        /// </summary>
-        /// <param name="lang">The language of the bible</param>
-        /// <param name="title">The title of the bible</param>
-        /// <param name="AionianEdition">If true, the link is of Aionian edition. Otherwise, it is the standard edition</param>
-        /// <returns>Returns the URL string of the Aionian bible database file (May or may not exist)</returns>
-        public static string GetBibleURL(string lang, string title, bool AionianEdition = true) => AionianEdition ? $"http://resources.aionianbible.org/Holy-Bible---[{lang}]---[{title}]---Aionian-Edition.noia" : $"http://resources.aionianbible.org/Holy-Bible---[{lang}]---[{title}]---Standard-Edition.noia";
-        /// <summary>
-        /// Returns a touple of all links available for download. Needless to say, this function requres internet
-        /// </summary>
-        /// <returns>Returs an array of every link avaialble to download in the Aionian</returns>
-        public static BibleLink[] GetAllUrls()
-        {
-            string ResourceSite = @"http://resources.aionianbible.org/";//Address of the page where we are searching the links
-            var responsestring = new StreamReader(WebRequest.Create(ResourceSite).GetResponse().GetResponseStream()).ReadToEnd();//The page containing a lot of things, but we are focused on the links
-            Regex regex = new Regex(@"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia");//Using REGEX to fetch all links to Aionian/Standard Editions of bible in the page 
-			var links=new List<BibleLink>();//A list to store all the links
-            foreach (Match match in regex.Matches(responsestring))//For every regex match
-            {
-				var caps=match.Groups;//Extract the captured groupes
-				links.Add(new BibleLink(){Language=caps[1].Value,Title=caps[2].Value,AionianEdition=caps[3].Value=="Aionian",URL=ResourceSite+caps[0].Value});//Add to the list
-            }
-            return links.ToArray();//Return the array of list
-        }
+		/// </summary>
+		/// <param name="lang">The language of the bible</param>
+		/// <param name="title">The title of the bible</param>
+		/// <param name="aionianEdition">If true, the link is of Aionian edition. Otherwise, it is the standard edition</param>
+		/// <returns>Returns the URL string of the Aionian bible database file (May or may not exist)</returns>
+		public static string GetBibleURL(string lang, string title, bool aionianEdition = true) => aionianEdition ? $"http://resources.aionianbible.org/Holy-Bible---[{lang}]---[{title}]---Aionian-Edition.noia" : $"http://resources.aionianbible.org/Holy-Bible---[{lang}]---[{title}]---Standard-Edition.noia";
+
+		/// <summary>
+		/// Returns a touple of all links available for download. Needless to say, this function requres internet
+		/// </summary>
+		/// <returns>Returs an array of every link avaialble to download in the Aionian</returns>
+		public static BibleLink[] GetAllUrls()
+		{
+			string ResourceSite = @"http://resources.aionianbible.org/";//Address of the page where we are searching the links
+			string responsestring = new StreamReader(WebRequest.Create(ResourceSite).GetResponse().GetResponseStream()).ReadToEnd();//The page containing a lot of things, but we are focused on the links
+			Regex regex = new Regex(@"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia");//Using REGEX to fetch all links to Aionian/Standard Editions of bible in the page 
+			List<BibleLink> links = new List<BibleLink>();//A list to store all the links
+			foreach (Match match in regex.Matches(responsestring))//For every regex match
+			{
+				GroupCollection caps = match.Groups;//Extract the captured groupes
+				links.Add(new BibleLink() { Language = caps[1].Value, Title = caps[2].Value, AionianEdition = caps[3].Value == "Aionian", URL = ResourceSite + caps[0].Value });//Add to the list
+			}
+			return links.ToArray();//Return the array of list
+		}
 		/// <summary>
 		/// Creates a bible from the inputted stream of a Aionian bible noia Database
 		/// </summary>
@@ -72,51 +73,63 @@ namespace Aionian
 		public static Bible ExtractBible(StreamReader stream)
 		{
 			string line;
-			var bible=new Bible()
+			Bible bible = new Bible()
 			{
-				Books=new Dictionary<BibleBook,Book>()
+				Books = new Dictionary<BibleBook, Book>()
 			};
-			byte CurrentChapter=255;
-			BibleBook CurrentBook=BibleBook.NULL;
-			Dictionary<byte,Dictionary<byte,string>> CurrentBookData=null;
-			Dictionary<byte,string> CurrentChapterData=null;
-			line=stream.ReadLine();//Read the first line containing file name
-			var g=Regex.Match(line,@"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia").Groups;
-			bible.Language=g[1].Value;
-			bible.Title=g[2].Value;
-			bible.AionianEdition=g[3].Value=="Aionian";
-			while((line=stream.ReadLine())!=null)
+			byte CurrentChapter = 255;
+			BibleBook CurrentBook = BibleBook.NULL;
+			Dictionary<byte, Dictionary<byte, string>> CurrentBookData = null;
+			Dictionary<byte, string> CurrentChapterData = null;
+			line = stream.ReadLine();//Read the first line containing file name
+			GroupCollection g = Regex.Match(line, @"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia").Groups;
+			bible.Language = g[1].Value;
+			bible.Title = g[2].Value;
+			bible.AionianEdition = g[3].Value == "Aionian";
+			while ((line = stream.ReadLine()) != null)
 			{
-				if(line[0]=='0')//The valid lines of the database do not begin with # or INDEX (header row)
+				if (line[0] == '0')//The valid lines of the database do not begin with # or INDEX (header row)
 				{
-					var rows=line.Split('\t');//Returns the line after splitting into multiple rows
-					BibleBook book=(BibleBook)(byte)Array.IndexOf(ShortBookNames,rows[1]);//Get the BibleBook from BookName
-					var chapter=byte.Parse(rows[2]);//Get the Chapter number
-					var verseno=byte.Parse(rows[3]);//Get the Verse number
-					var verse=rows[4];//Get the verse content
-					if(book!=CurrentBook)
+					string[] rows = line.Split('\t');//Returns the line after splitting into multiple rows
+					BibleBook book = (BibleBook)(byte)Array.IndexOf(ShortBookNames, rows[1]);//Get the BibleBook from BookName
+					byte chapter = byte.Parse(rows[2]);//Get the Chapter number
+					byte verseno = byte.Parse(rows[3]);//Get the Verse number
+					string verse = rows[4];//Get the verse content
+					if (book != CurrentBook)
 					{
-						if(CurrentBookData!=null)bible.Books[CurrentBook]=new Book()
+						if (CurrentBookData != null)
 						{
-							Chapter=CurrentBookData, 
-							ShortBookName=ShortBookNames[(byte)CurrentBook],
-							BookIndex=(byte)CurrentBook,
-							BookName=Enum.GetName(typeof(BibleBook),book)
-						};
-						CurrentBookData=new Dictionary<byte, Dictionary<byte, string>>();
-						CurrentBook=book;
-						CurrentChapterData=new Dictionary<byte, string>();
-						CurrentChapter=chapter;
+							CurrentBookData[CurrentChapter] = CurrentChapterData;
+							bible.Books[CurrentBook] = new Book()
+							{
+								Chapter = CurrentBookData,
+								ShortBookName = ShortBookNames[(byte)CurrentBook],
+								BookIndex = (byte)CurrentBook,
+								BookName = Enum.GetName(typeof(BibleBook), book - 1)
+							};
+						}
+						CurrentBookData = new Dictionary<byte, Dictionary<byte, string>>();
+						CurrentBook = book;
+						CurrentChapterData = new Dictionary<byte, string>();
+						CurrentChapter = chapter;
 					}
-					else if(chapter!=CurrentChapter)
+					else if (chapter != CurrentChapter)
 					{
-						CurrentBookData[CurrentChapter]=CurrentChapterData;
-						CurrentChapterData=new Dictionary<byte, string>();
-						CurrentChapter=chapter;
+						CurrentBookData[CurrentChapter] = CurrentChapterData;
+						CurrentChapterData = new Dictionary<byte, string>();
+						CurrentChapter = chapter;
 					}
-					CurrentChapterData[verseno]=verse;
+					CurrentChapterData[verseno] = verse;
 				}
 			}
+			CurrentBookData[CurrentChapter] = CurrentChapterData;
+			bible.Books[CurrentBook] = new Book()
+			{
+				Chapter = CurrentBookData,
+				ShortBookName = ShortBookNames[(byte)CurrentBook],
+				BookIndex = (byte)CurrentBook,
+				BookName = Enum.GetName(typeof(BibleBook), BibleBook.Reveleation)
+			};
 			return bible;
 		}
 		/// <summary>
@@ -126,9 +139,10 @@ namespace Aionian
 		/// </summary>
 		/// <param name="link">The bible link containing the URL</param>
 		/// <returns>The stream of the *.noia file is returned</returns>
-		public static StreamReader DownloadStream(this BibleLink link) => new StreamReader(HttpWebRequest.Create(link.URL).GetResponse().GetResponseStream());
-    }
+		public static StreamReader DownloadStream(this BibleLink link) => new StreamReader(WebRequest.Create(link.URL).GetResponse().GetResponseStream());
+	}
 	/// <summary>Represents a single link of an Aionian Bible</summary>
+	[Serializable]
 	public struct BibleLink
 	{
 		/// <summary>The Title of the bible</summary>
