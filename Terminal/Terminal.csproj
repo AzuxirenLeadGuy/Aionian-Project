@@ -1,15 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\Library\Aionian.csproj" />
-  </ItemGroup>
-  <ItemGroup>
+    <PackageReference Include="Azuxiren.Aionian" Version="1.0.0" />
     <PackageReference Include="ConsoleTables" Version="2.4.2" />
     <Content Include="Program.cs" />
-    <Content Include="ProgressBar.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="." />
   </ItemGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageId>Azuxiren.Aionian.Terminal</PackageId>
+    <Version>1.0.0.0</Version>
+    <Authors>AzuxirenLeadGuy</Authors>
+    <Company>Azuxiren</Company>
+    <RepositoryUrl>https://ashishjacobsam87.visualstudio.com/AionianBibleLibrary/_git/AionianBibleLibrary</RepositoryUrl>
+    <Description>Terminal tool for using Aionian Bible resources.</Description>
+    <PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
+    <PackageTags>Aionian;Bible;Tool</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>../Nuget/</PackageOutputPath>
+	<Title>Aionian Library</Title>
+	<Summary>Terminal tool for Aionian</Summary>
+	<PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+	<Language>C#</Language>
+	<RepositoryType>git</RepositoryType>
   </PropertyGroup>
 </Project>
