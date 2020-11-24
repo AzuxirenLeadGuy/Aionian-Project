@@ -4,7 +4,7 @@ This library and tool is a small attempt to bring Aionian Bible to the dotnet
 
 ## Aionian Library
 
-Aionian Library contains simplistic features to consume the bible resources. As of now, the main utilities are:
+Aionian Library contains simplistic features to consume the bible resources. As of now, the following is provided
 
 The `BibleLink` struct which defines the bible link as provided in http://resources.aionianbible.org/, The `Bible` struct which contains all the content of bible using nested Dictionaries, and `BibleBook` enum which has all the books of the bible defined within it.
 
@@ -22,7 +22,7 @@ Provided with these are static utility methods, most importantly for getting all
 
 By using a stream, there is an additional option of downloading the file by the URL in the `BibleLink` object and opening it via a `Stream` to load the Bible.
 
-The bible struct is also compatible to be serialized with Json, **provided the option `IncludeFields = true` is set.
+The bible struct is also compatible to be serialized with Json, **provided the option `IncludeFields = true` is set.**
 	
 	//Prepare Option for Serializing
 	var options = new JsonSerializerOptions() { IncludeFields = true }
