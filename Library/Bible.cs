@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-
 namespace Aionian
 {
 	/// <summary> This denotes a Bible of a specific Language and Version/Title</summary>
@@ -17,7 +16,7 @@ namespace Aionian
 		/// <summary> Indicates whether this Bible is Aionian or Standard edition </summary>
 		[JsonInclude] public bool AionianEdition;
 		/// <summary> The Collection of books </summary>
-		[JsonInclude] public IDictionary<BibleBook, Book> Books;
+		[JsonInclude] public Dictionary<BibleBook, Book> Books;
 		/// <summary>
 		/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 		/// </summary>
@@ -58,10 +57,7 @@ namespace Aionian
 		public static Bible ExtractBible(StreamReader stream)
 		{
 			string line;
-			Bible bible = new Bible()
-			{
-				Books = new Dictionary<BibleBook, Book>()
-			};
+			Bible bible = new Bible() { Books = new Dictionary<BibleBook, Book>() };
 			byte CurrentChapter = 255;
 			BibleBook CurrentBook = BibleBook.NULL;
 			Dictionary<byte, Dictionary<byte, string>> CurrentBookData = null;
@@ -85,13 +81,7 @@ namespace Aionian
 						if (CurrentBookData != null)
 						{
 							CurrentBookData[CurrentChapter] = CurrentChapterData;
-							bible.Books[CurrentBook] = new Book()
-							{
-								Chapter = CurrentBookData,
-								ShortBookName = ShortBookNames[(byte)CurrentBook],
-								BookIndex = (byte)CurrentBook,
-								BookName = Enum.GetName(typeof(BibleBook), book - 1)
-							};
+							bible.Books[CurrentBook] = new Book() { Chapter = CurrentBookData, BookIndex = (byte)CurrentBook };
 						}
 						CurrentBookData = new Dictionary<byte, Dictionary<byte, string>>();
 						CurrentBook = book;
@@ -108,13 +98,7 @@ namespace Aionian
 				}
 			}
 			CurrentBookData[CurrentChapter] = CurrentChapterData;
-			bible.Books[CurrentBook] = new Book()
-			{
-				Chapter = CurrentBookData,
-				ShortBookName = ShortBookNames[(byte)CurrentBook],
-				BookIndex = (byte)CurrentBook,
-				BookName = Enum.GetName(typeof(BibleBook), BibleBook.Reveleation)
-			};
+			bible.Books[CurrentBook] = new Book() { Chapter = CurrentBookData, BookIndex = (byte)CurrentBook };
 			return bible;
 		}
 	}
@@ -124,13 +108,13 @@ namespace Aionian
 	{
 		/// <summary> The Index of the book (Starts from 1) </summary>
 		[JsonInclude] public byte BookIndex;
-		/// <summary> The Full name of the book </summary>
-		[JsonInclude] public string BookName;
-		/// <summary> The Short name of the book </summary>
-		[JsonInclude] public string ShortBookName;
 		/// <summary> The collection of chapters in this book </summary>
 		[JsonInclude] public Dictionary<byte, Dictionary<byte, string>> Chapter;
 		/// <summary> Returns the current BibleBook enum of this chapter </summary>
 		public BibleBook CurrentBibleBook => (BibleBook)BookIndex;
+		/// <summary> The Full name of the book </summary>
+		public string BookName => Enum.GetName(typeof(BibleBook), (BibleBook)BookIndex);
+		/// <summary> The Short name of the book </summary>
+		public string ShortBookName => Bible.ShortBookNames[BookIndex];
 	}
 }

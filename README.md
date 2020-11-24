@@ -26,18 +26,33 @@ You can add this package from [Nuget](https://www.nuget.org/packages/Azuxiren.Ai
 
 ## Aionian Tool
 
-This is a basic terminal application (dotnet tool) to showcase the Aionian Library. It features downloading of bible modules for offline reading and a simplistic verse-by-verse searching function.
+This is a basic terminal application (dotnet tool) to showcase the Aionian Library. It features the following:
 
-Install it from [Nuget]()
+1) Bible reading
+2) Bible word search
+3) Download/Manage any Aionian bible package
+
+Install it from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian.Terminal/)
 
 # Release Notes:
 
 ## Aionian Library
 
+v1.0.1.1
+Corrected Bible abstract IDictionary dependancy
+v1.0.1.0
+Reduced Target Framework requirements;
+Removed a bug causing potential memory leaks on BibleLink.GetAllUrlsFromWebsite();
+Made BibleLink Serialiazable with Json (System.Text.Json)
 v1.0.0.0 First Release
 
 ## Aionian Tool
 
+v1.0.1.0
+Reduced framework requirments;
+Reduced dependancies; 
+Made the program code more readable and easier to debug;
+Corrected package to be tool
 v1.0.0.0 First Release
 
 # Building

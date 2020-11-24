@@ -4,6 +4,8 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System;
 using System.Linq;
+using System.Text.Json.Serialization;
+
 namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
@@ -11,13 +13,13 @@ namespace Aionian
 	public struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
 	{
 		/// <summary>The Title of the bible</summary>
-		public string Title;
+		[JsonInclude] public string Title;
 		/// <summary>The Language of the bible</summary>
-		public string Language;
+		[JsonInclude] public string Language;
 		/// <summary>The URL of the bible to download</summary>
-		public string URL;
+		[JsonInclude] public string URL;
 		/// <summary>Indicates whether the bible edition is Aionian or not</summary>
-		public bool AionianEdition;
+		[JsonInclude] public bool AionianEdition;
 		/// <summary>
 		/// Compares the other link with this link in terms of precedence in a sorted array
 		/// </summary>
@@ -53,7 +55,8 @@ namespace Aionian
 		public static BibleLink[] GetAllUrlsFromWebsite()
 		{
 			string ResourceSite = @"http://resources.aionianbible.org/";//Address of the page where we are searching the links
-			string responsestring = new StreamReader(WebRequest.Create(ResourceSite).GetResponse().GetResponseStream()).ReadToEnd();//The page containing a lot of things, but we are focused on the links
+			string responsestring;
+			using (StreamReader sr = new StreamReader(WebRequest.Create(ResourceSite).GetResponse().GetResponseStream())) responsestring = sr.ReadToEnd();//The page containing a lot of things, but we are focused on the links
 			Regex regex = new Regex(@"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia");//Using REGEX to fetch all links to Aionian/Standard Editions of bible in the page 
 			HashSet<BibleLink> links = new HashSet<BibleLink>();//A list to store all the links
 			foreach (Match match in regex.Matches(responsestring))//For every regex match

@@ -1,31 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Azuxiren.Aionian" Version="1.0.0" />
+    <PackageReference Include="Azuxiren.Aionian" Version="1.0.1.1" />
     <PackageReference Include="ConsoleTables" Version="2.4.2" />
     <Content Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="icon.png" Pack="true" PackagePath="." />
+    <Content Include="AssetManagement.cs" />
+    <Content Include="WordSearcher.cs" />
+    <Content Include="ChapterDisplay.cs" />
   </ItemGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <PackageId>Azuxiren.Aionian.Terminal</PackageId>
-    <Version>1.0.0.0</Version>
+	<PackAsTool>true</PackAsTool>
+	<ToolCommandName>aionian-terminal</ToolCommandName>
+    <Version>1.0.1.0</Version>
     <Authors>AzuxirenLeadGuy</Authors>
     <Company>Azuxiren</Company>
     <RepositoryUrl>https://ashishjacobsam87.visualstudio.com/AionianBibleLibrary/_git/AionianBibleLibrary</RepositoryUrl>
     <Description>Terminal tool for using Aionian Bible resources.</Description>
     <PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
-    <PackageTags>Aionian;Bible;Tool</PackageTags>
+    <PackageTags>Aionian;Bible;Tool;Terminal</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>../Nuget/</PackageOutputPath>
-	<Title>Aionian Library</Title>
-	<Summary>Terminal tool for Aionian</Summary>
-	<PackageReleaseNotes>Initial Release</PackageReleaseNotes>
-	<Language>C#</Language>
-	<RepositoryType>git</RepositoryType>
+    <Title>Aionian Bible Terminal</Title>
+    <Summary>Terminal tool for Aionian</Summary>
+    <PackageReleaseNotes>Reduced framework requirments;Reduced dependancies; Made the program code more readable and easier to debug;Corrected package to be tool</PackageReleaseNotes>
+    <Language>C#</Language>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 </Project>

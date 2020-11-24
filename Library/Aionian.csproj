@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Azuxiren.Aionian</PackageId>
-    <Version>1.0.0.0</Version>
+    <Version>1.0.1.1</Version>
     <Authors>AzuxirenLeadGuy</Authors>
     <Company>Azuxiren</Company>
     <RepositoryUrl>https://ashishjacobsam87.visualstudio.com/AionianBibleLibrary/_git/AionianBibleLibrary</RepositoryUrl>
@@ -16,7 +16,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<Title>Aionian Library</Title>
 	<Summary>Package for Aionian resources</Summary>
-	<PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+	<PackageReleaseNotes>
+		Corrected Bible abstract IDictionary dependancy
+	</PackageReleaseNotes>
 	<Language>C#</Language>
 	<RepositoryType>git</RepositoryType>
   </PropertyGroup>
@@ -27,6 +29,8 @@
     <Content Include="BibleBook.cs" />
     <Content Include="Bible.cs" />
     <Content Include="BibleLink.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="5.0.0" />
   </ItemGroup>
 </Project>
