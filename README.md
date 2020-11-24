@@ -22,6 +22,18 @@ Provided with these are static utility methods, most importantly for getting all
 
 By using a stream, there is an additional option of downloading the file by the URL in the `BibleLink` object and opening it via a `Stream` to load the Bible.
 
+The bible struct is also compatible to be serialized with Json, **provided the option `IncludeFields = true` is set.
+	
+	//Prepare Option for Serializing
+	var options = new JsonSerializerOptions() { IncludeFields = true }
+
+	//Serialization Example
+	string SerializedBible = JsonSerializer.Serialize(BibleObject, options);
+
+	...
+	//Deserialization Example
+	var Bible = JsonSerializer.Deserialize<Bible>(SerializedBible, options);
+
 You can add this package from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian/)
 
 ## Aionian Tool
@@ -39,21 +51,26 @@ Install it from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian.Terminal
 ## Aionian Library
 
 v1.0.1.1
-Corrected Bible abstract IDictionary dependancy
+*	Corrected Bible abstract IDictionary dependancy
+
 v1.0.1.0
-Reduced Target Framework requirements;
-Removed a bug causing potential memory leaks on BibleLink.GetAllUrlsFromWebsite();
-Made BibleLink Serialiazable with Json (System.Text.Json)
-v1.0.0.0 First Release
+*	Reduced Target Framework requirements;
+*	Removed a bug causing potential memory leaks on BibleLink.GetAllUrlsFromWebsite();
+*	Made BibleLink Serialiazable with Json (System.Text.Json)
+
+v1.0.0.0 
+*	First Release
 
 ## Aionian Tool
 
 v1.0.1.0
-Reduced framework requirments;
-Reduced dependancies; 
-Made the program code more readable and easier to debug;
-Corrected package to be tool
-v1.0.0.0 First Release
+*	Reduced framework requirments;
+*	Reduced dependancies; 
+*	Made the program code more readable and easier to debug;
+*	Corrected package to be tool
+
+v1.0.0.0 
+*	First Release
 
 # Building
 
