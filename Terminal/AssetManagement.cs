@@ -2,7 +2,10 @@ using ConsoleTables;
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Net;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using Progress_bar;
 
 namespace Aionian.Terminal
 {
@@ -36,6 +39,7 @@ namespace Aionian.Terminal
 					{
 						Console.WriteLine("Enter the ID(s) of the bible to download (Multiple IDs are to be separted by space");
 						files = 0;
+						object lockobject = new object();
 						foreach (string Id in Console.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries))
 						{
 							if (int.TryParse(Id, out int x) && x >= 1 && x <= list.Length)
@@ -45,15 +49,37 @@ namespace Aionian.Terminal
 								else
 								{
 									Console.WriteLine($"Downloading file: {link.AssetFileName()}");
+									ConsoleProgressBar progressBar = new ConsoleProgressBar(20);
 									try
 									{
-										Bible downloadedbible = Bible.ExtractBible(link.DownloadStream());
-										SaveFileAsJsonAsync(downloadedbible, downloadedbible.AssetFileName()).Wait();
+										Bible downloadedbible = Bible.ExtractBible(link.DownloadStreamAsync(OnDownloadProgress, OnDownloadComplete).Result);
+										SaveFileAsJson(downloadedbible, downloadedbible.AssetFileName());
 										files++;
 										AvailableBibles.Add(link);
-										Console.WriteLine($"Download Sucessful");
+										Console.WriteLine("\nFile is saved successfully");
 									}
-									catch (Exception e) { Console.WriteLine(e.Message); }
+									catch (Exception e)
+									{
+										Debug.WriteLine(e.Message);
+										Console.WriteLine("\n\nUnexpected Error");
+									}
+									void OnDownloadProgress(object o, DownloadProgressChangedEventArgs e)
+									{
+										lock (lockobject)
+										{
+											progressBar.Percentage = (byte)e.ProgressPercentage;
+											progressBar.Write();
+										}
+									}
+									void OnDownloadComplete(object o, DownloadDataCompletedEventArgs e)
+									{
+										lock (lockobject)
+										{
+											progressBar.Percentage = 100;
+											progressBar.Write();
+										}
+										Console.WriteLine("\nFile Download Complete.");
+									}
 								}
 							}
 							else Console.WriteLine($"Ignoring Invalid input {Id}");
@@ -110,7 +136,7 @@ namespace Aionian.Terminal
 				{
 					BibleLink link = results[i];
 					BibleLink lin2 = results[i + 1];
-					System.Diagnostics.Debug.WriteLine($"link={link.AssetFileName()}; lin2={lin2.AssetFileName()};\n{link.Equals(lin2)} : {link.CompareTo(lin2)}\n\n");
+					Debug.WriteLine($"link={link.AssetFileName()}; lin2={lin2.AssetFileName()};\n{link.Equals(lin2)} : {link.CompareTo(lin2)}\n\n");
 					_ = table.AddRow(i + 1, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard", "|", i + 2, lin2.Title, lin2.Language, lin2.AionianEdition ? "Aionian" : "Standard");
 				}
 				table.Options.EnableCount = false;
@@ -119,16 +145,9 @@ namespace Aionian.Terminal
 			}
 		}
 		private static void DeleteAllAssets() => Directory.Delete(AppDataFolderPath, true);
-		public static Bible LoadBible(this BibleLink link) => LoadFileAsJsonAsync<Bible>(link.AssetFileName()).Result;
-		public static void WriteAssetLog() => SaveFileAsJsonAsync(AvailableBibles, AssetMainFilePath).Wait();
-
-		public static async Task SaveFileAsJsonAsync<T>(T item, string filename)
-		{
-			using (FileStream sr = new FileStream(AssetFilePath(filename), FileMode.Create)) await JsonSerializer.SerializeAsync(sr, item, new JsonSerializerOptions() { IncludeFields = true });
-		}
-		public static async Task<T> LoadFileAsJsonAsync<T>(string filename)
-		{
-			using (FileStream sr = new FileStream(AssetFilePath(filename), FileMode.Open)) return await JsonSerializer.DeserializeAsync<T>(sr, new JsonSerializerOptions() { IncludeFields = true });
-		}
+		public static Bible LoadBible(this BibleLink link) => LoadFileAsJson<Bible>(link.AssetFileName());
+		public static void WriteAssetLog() => SaveFileAsJson(AvailableBibles, AssetMainFilePath);
+		public static void SaveFileAsJson<T>(T item, string filename) => File.WriteAllText(AssetFilePath(filename), JsonSerializer.Serialize(item, new JsonSerializerOptions() { IncludeFields = true }));
+		public static T LoadFileAsJson<T>(string filename) => JsonSerializer.Deserialize<T>(File.ReadAllText(AssetFilePath(filename)));
 	}
 }

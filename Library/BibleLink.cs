@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
-
+using System.Threading.Tasks;
 namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
@@ -47,7 +47,7 @@ namespace Aionian
 		/// Returns the string represntation of this object
 		/// </summary>
 		/// <returns>Returns the URL</returns>
-		public override string ToString() => URL;
+		public override string ToString() => $"{Language}|{Title}";
 		/// <summary>
 		/// Returns a touple of all links available for download. Needless to say, this function requres internet
 		/// </summary>
@@ -73,5 +73,19 @@ namespace Aionian
 		/// </summary>
 		/// <returns>The stream of the *.noia file is returned</returns>
 		public StreamReader DownloadStream() => new StreamReader(WebRequest.Create(URL).GetResponse().GetResponseStream());
+		/// <summary>
+		/// Preview method for downloading and keeping track of progress of download
+		/// </summary>
+		/// <param name="progressChanged">The event called when the download progress is changed</param>
+		/// <param name="downloadDataCompleted">The event called when the download is completed</param>
+		/// <returns>Returns the FileStream of the .noia database of Bible</returns>
+		public async Task<StreamReader> DownloadStreamAsync(DownloadProgressChangedEventHandler progressChanged = null, DownloadDataCompletedEventHandler downloadDataCompleted = null)
+		{
+			WebClient client = new WebClient();
+			if (progressChanged != null) client.DownloadProgressChanged += progressChanged;
+			if (downloadDataCompleted != null) client.DownloadDataCompleted += downloadDataCompleted;
+			string result = await client.DownloadStringTaskAsync(new Uri(URL));
+			return new StreamReader(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(result)));
+		}
 	}
 }

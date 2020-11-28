@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-
 namespace Aionian.Terminal
 {
 	public static partial class Program
@@ -37,36 +36,9 @@ namespace Aionian.Terminal
 						else if (input == '2')//Create the large regex for matching all of the words
 						{
 							string[] words = inputline.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-							int length = words.Length;
-							int factorial = 0;
-							switch (length)
-							{
-								case 2:
-									factorial = 2;
-									break;
-								case 3:
-									factorial = 6;
-									break;
-								case 4:
-									factorial = 24;
-									break;
-								case 5:
-									factorial = 120;
-									break;
-								case 6:
-									factorial = 720;
-									break;
-								default: throw new ArgumentException($"Did not expect {length} words in option 2 of search");
-							}
 							StringBuilder regexpreparer = new StringBuilder();
-							for (int i = 1; i <= factorial; i++, _ = NextPermutation(words))
-							{
-								_ = regexpreparer.Append(@"((\W|^)").Append(words[0]);
-								for (int j = 1; j < length; j++) _ = regexpreparer.Append($" .* {words[j]}");
-								_ = regexpreparer.Append(@"(\W|$))");
-								if (i != factorial) _ = regexpreparer.Append("|");
-							}
-							inputline = regexpreparer.ToString();
+							foreach (string word in words) _ = regexpreparer.Append($"(?=.*\\b{word}\\b)");
+							inputline = regexpreparer.Append("(^.*$)").ToString();
 						}
 					}
 					Regex r = new Regex(inputline, RegexOptions.IgnoreCase);
@@ -85,34 +57,6 @@ namespace Aionian.Terminal
 				ConsoleTable table = new ConsoleTable("ID", "Title", "Language", "Version");
 				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 				table.Write();
-			}
-			bool NextPermutation<T>(T[] array) where T : IComparable<T>
-			{
-				// Find non-increasing suffix
-				int i = array.Length - 1;
-				while (i > 0 && array[i - 1].CompareTo(array[i]) >= 0) i--;
-				if (i <= 0)
-				{
-					Array.Sort(array);
-					return false;
-				}
-				// Find successor to pivot
-				int j = array.Length - 1;
-				while (array[j].CompareTo(array[i - 1]) <= 0) j--;
-				T temp = array[i - 1];
-				array[i - 1] = array[j];
-				array[j] = temp;
-				// Reverse suffix
-				j = array.Length - 1;
-				while (i < j)
-				{
-					temp = array[i];
-					array[i] = array[j];
-					array[j] = temp;
-					i++;
-					j--;
-				}
-				return true;
 			}
 			void PrintVerse(BibleBook bibleBook, byte chapterNo, byte verseNo, string verse)
 			{

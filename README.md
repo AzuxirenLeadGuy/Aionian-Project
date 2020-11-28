@@ -20,7 +20,7 @@ Provided with these are static utility methods, most importantly for getting all
 	var AnotherBible = Bible.ExtractBible(mylink.DownloadStream());//One line 
 	string verse = AnotherBible[BibleBook.John, 3, 16];
 
-By using a stream, there is an additional option of downloading the file by the URL in the `BibleLink` object and opening it via a `Stream` to load the Bible.
+By using a stream, there is an additional option of downloading the file by the URL in the `BibleLink` object and opening it via a `Stream` to load the Bible. There is now also an Async method for downloading the bible with events that are fired on the update on progress.
 
 The bible struct is also compatible to be serialized with Json, **provided the option `IncludeFields = true` is set.**
 	

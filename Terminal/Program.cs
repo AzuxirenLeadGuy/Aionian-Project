@@ -15,7 +15,7 @@ namespace Aionian.Terminal
 			Console.WriteLine($"Asset path is {AssetMainFilePath}");
 			if (!Directory.Exists(AppDataFolderPath)) _ = Directory.CreateDirectory(AppDataFolderPath);
 			if (!File.Exists(AssetMainFilePath)) WriteAssetLog();
-			else AvailableBibles = LoadFileAsJsonAsync<List<BibleLink>>(AssetMainFilePath).Result;
+			else AvailableBibles = LoadFileAsJson<List<BibleLink>>(AssetMainFilePath);
 			//Initialization Complete
 			if (AvailableBibles.Count == 0)
 			{

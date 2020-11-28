@@ -1,36 +1,37 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageId>Azuxiren.Aionian</PackageId>
-    <Version>1.0.1.1</Version>
-    <Authors>AzuxirenLeadGuy</Authors>
-    <Company>Azuxiren</Company>
-    <RepositoryUrl>https://ashishjacobsam87.visualstudio.com/AionianBibleLibrary/_git/AionianBibleLibrary</RepositoryUrl>
-    <Description>Package to consume Bible resources provided by Aionian</Description>
-    <PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
-    <PackageTags>Aionian;Package</PackageTags>
-    <PackageIcon>icon.png</PackageIcon>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageOutputPath>../Nuget/</PackageOutputPath>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<Title>Aionian Library</Title>
-	<Summary>Package for Aionian resources</Summary>
-	<PackageReleaseNotes>
-		Corrected Bible abstract IDictionary dependancy
-	</PackageReleaseNotes>
-	<Language>C#</Language>
-	<RepositoryType>git</RepositoryType>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="icon.png" Pack="true" PackagePath="." />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="BibleBook.cs" />
-    <Content Include="Bible.cs" />
-    <Content Include="BibleLink.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="5.0.0" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<PackageId>Azuxiren.Aionian</PackageId>
+		<Version>1.0.2</Version>
+		<Authors>AzuxirenLeadGuy</Authors>
+		<Company>Azuxiren</Company>
+		<RepositoryUrl>https://ashishjacobsam87.visualstudio.com/AionianBibleLibrary/_git/AionianBibleLibrary</RepositoryUrl>
+		<Description>Package to consume Bible resources provided by Aionian</Description>
+		<PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
+		<PackageTags>Aionian;Bible;Package</PackageTags>
+		<PackageIcon>icon.png</PackageIcon>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>../Nuget/</PackageOutputPath>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Title>Aionian Library</Title>
+		<Summary>Package for Aionian resources</Summary>
+		<PackageReleaseNotes>
+			Added Async method for download with progress update;
+			Overrided BibleLink ToString() method
+		</PackageReleaseNotes>
+		<Language>C#</Language>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="icon.png" Pack="true" PackagePath="."/>
+	</ItemGroup>
+	<ItemGroup>
+		<Content Include="BibleBook.cs"/>
+		<Content Include="Bible.cs"/>
+		<Content Include="BibleLink.cs"/>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Text.Json" Version="5.0.0"/>
+	</ItemGroup>
 </Project>
