@@ -1,0 +1,7 @@
+Microsoft (R) Test Execution Command Line Tool Version 16.9.4
+Copyright (c) Microsoft Corporation.  All rights reserved.
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 9 s

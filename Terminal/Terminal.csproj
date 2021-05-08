@@ -1,18 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<ItemGroup>
-		<PackageReference Include="ConsoleTables" Version="2.4.2"/>
-		<Content Include="Program.cs"/>
+		<PackageReference Include="ConsoleTables" Version="2.4.2" />
+		<Content Include="Program.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="icon.png" Pack="true" PackagePath="."/>
-		<Content Include="AssetManagement.cs"/>
-		<Content Include="WordSearcher.cs"/>
-		<Content Include="ChapterDisplay.cs"/>
+		<None Include="icon.png" Pack="true" PackagePath="." />
+		<Content Include="AssetManagement.cs" />
+		<Content Include="WordSearcher.cs" />
+		<Content Include="ChapterDisplay.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Library\Aionian.csproj"/>
-		<Content Include="ProgressBar.cs"/>
+		<Content Include="ProgressBar.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Library\Aionian.csproj" />
 	</ItemGroup>
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -20,10 +22,10 @@
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>1.0.1.1</Version>
+		<Version>1.1.0</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
-		<RepositoryUrl>https://ashishjacobsam87.visualstudio.com/AionianBibleLibrary/_git/AionianBibleLibrary</RepositoryUrl>
+		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
 		<Description>Terminal tool for using Aionian Bible resources.</Description>
 		<PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
 		<PackageTags>Aionian;Bible;Tool;Terminal</PackageTags>
@@ -32,7 +34,7 @@
 		<PackageOutputPath>../Nuget/</PackageOutputPath>
 		<Title>Aionian Bible Terminal</Title>
 		<Summary>Terminal tool for Aionian</Summary>
-		<PackageReleaseNotes>Added ProgressBar while downloading;</PackageReleaseNotes>
+		<PackageReleaseNotes>Removed bug for app crashing when loading chapters with verses absent in some bibles (like Matt 17:21 in Aionian);</PackageReleaseNotes>
 		<Language>C#</Language>
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>

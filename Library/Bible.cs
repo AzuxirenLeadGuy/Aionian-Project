@@ -7,16 +7,30 @@ namespace Aionian
 {
 	/// <summary> This denotes a Bible of a specific Language and Version/Title</summary>
 	[Serializable]
-	public struct Bible
+	public class Bible
 	{
 		/// <summary> The Language of the bible </summary>
-		[JsonInclude] public string Language;
+		[JsonInclude] public readonly string Language;
 		/// <summary> The Specific bible </summary>
-		[JsonInclude] public string Title;
+		[JsonInclude] public readonly string Title;
 		/// <summary> Indicates whether this Bible is Aionian or Standard edition </summary>
-		[JsonInclude] public bool AionianEdition;
+		[JsonInclude] public readonly bool AionianEdition;
 		/// <summary> The Collection of books </summary>
-		[JsonInclude] public Dictionary<BibleBook, Book> Books;
+		[JsonInclude] public readonly Dictionary<BibleBook, Book> Books;
+		/// <summary>
+		/// Default constructor for the Bible type
+		/// </summary>
+		/// <param name="title">Title</param>
+		/// <param name="language">Language</param>
+		/// <param name="aionianEdition">Aionian-Edition bool</param>
+		/// <param name="books">Dictionary of Bible content</param>
+		public Bible(string title, string language, bool aionianEdition, Dictionary<BibleBook, Book> books)
+		{
+			Language = language;
+			Title = title;
+			AionianEdition = aionianEdition;
+			Books = books;
+		}
 		/// <summary>
 		/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 		/// </summary>
@@ -24,7 +38,7 @@ namespace Aionian
 		/// <summary>
 		/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 		/// </summary>
-		public string this[(BibleBook, byte, byte) v] => this[v.Item1, v.Item2, v.Item3];
+		public string this[(BibleBook book, byte chapter, byte verse) v] => this[v.book, v.chapter, v.verse];
 		/// <summary>
 		/// Contains a list of Short Names of Books. The first index is NULL so as to match the enum BibleBook index and make its value interconvertible to this array's index
 		/// 
@@ -57,19 +71,19 @@ namespace Aionian
 		public static Bible ExtractBible(StreamReader stream)
 		{
 			string line;
-			Bible bible = new Bible() { Books = new Dictionary<BibleBook, Book>() };
 			byte CurrentChapter = 255;
 			BibleBook CurrentBook = BibleBook.NULL;
 			Dictionary<byte, Dictionary<byte, string>> CurrentBookData = null;
 			Dictionary<byte, string> CurrentChapterData = null;
 			line = stream.ReadLine();//Read the first line containing file name
 			GroupCollection g = Regex.Match(line, @"Holy-Bible---([a-zA-Z-]*)---([a-zA-Z-]*)---(Aionian|Standard)-Edition\.noia").Groups;
-			bible.Language = g[1].Value;
-			bible.Title = g[2].Value;
-			bible.AionianEdition = g[3].Value == "Aionian";
+			string language = g[1].Value;
+			string title = g[2].Value;
+			bool aionianEdition = g[3].Value == "Aionian";
+			Dictionary<BibleBook, Book> books = new Dictionary<BibleBook, Book>();
 			while ((line = stream.ReadLine()) != null)
 			{
-				if (line[0] == '0')//The valid lines of the database do not begin with # or INDEX (header row)
+				if (line[0] == '0')//The valid lines of the database begin with 0, not with # or INDEX (header row)
 				{
 					string[] rows = line.Split('\t');//Returns the line after splitting into multiple rows
 					BibleBook book = (BibleBook)(byte)Array.IndexOf(ShortBookNames, rows[1]);//Get the BibleBook from BookName
@@ -81,7 +95,7 @@ namespace Aionian
 						if (CurrentBookData != null)
 						{
 							CurrentBookData[CurrentChapter] = CurrentChapterData;
-							bible.Books[CurrentBook] = new Book() { Chapter = CurrentBookData, BookIndex = (byte)CurrentBook };
+							books[CurrentBook] = new Book((byte)CurrentBook, CurrentBookData);
 						}
 						CurrentBookData = new Dictionary<byte, Dictionary<byte, string>>();
 						CurrentBook = book;
@@ -98,18 +112,24 @@ namespace Aionian
 				}
 			}
 			CurrentBookData[CurrentChapter] = CurrentChapterData;
-			bible.Books[CurrentBook] = new Book() { Chapter = CurrentBookData, BookIndex = (byte)CurrentBook };
-			return bible;
+			books[CurrentBook] = new Book((byte)CurrentBook, CurrentBookData);
+			return new Bible(title, language, aionianEdition, books);
 		}
 	}
 	/// <summary> The Language of the bible </summary>
 	[Serializable]
-	public struct Book
+	public class Book
 	{
 		/// <summary> The Index of the book (Starts from 1) </summary>
-		[JsonInclude] public byte BookIndex;
+		[JsonInclude] public readonly byte BookIndex;
 		/// <summary> The collection of chapters in this book </summary>
-		[JsonInclude] public Dictionary<byte, Dictionary<byte, string>> Chapter;
+		[JsonInclude] public readonly Dictionary<byte, Dictionary<byte, string>> Chapter;
+		/// <summary> The Constructor for this type</summary>
+		public Book(byte bookindex, Dictionary<byte, Dictionary<byte, string>> chapter)
+		{
+			BookIndex = bookindex;
+			Chapter = chapter;
+		}
 		/// <summary> Returns the current BibleBook enum of this chapter </summary>
 		public BibleBook CurrentBibleBook => (BibleBook)BookIndex;
 		/// <summary> The Full name of the book </summary>

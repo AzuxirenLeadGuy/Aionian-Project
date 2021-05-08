@@ -52,10 +52,10 @@ namespace Aionian.Terminal
 			void DisplayChapter(Dictionary<byte, string> chapter, string shortbookname, byte chapterno)
 			{
 				int len = chapter.Count;
-				for (byte i = 1; i <= len; i++)
+				foreach(var verse in chapter.Keys)
 				{
-					string vh = $"{shortbookname} {chapterno}:{i}";
-					Console.WriteLine($"{vh,12}|{chapter[i]}");
+					string vh = $"{shortbookname} {chapterno}:{verse}";
+					Console.WriteLine($"{vh,12}|{chapter[verse]}");
 				}
 			}
 		}

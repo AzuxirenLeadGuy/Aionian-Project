@@ -2,3 +2,5 @@
 [Oo]bj/
 .vs/
 .vscode/
+Nuget/
+xunit-help.md

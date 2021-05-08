@@ -10,28 +10,36 @@ namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
 	[Serializable]
-	public struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
+	public class BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
 	{
 		/// <summary>The Title of the bible</summary>
-		[JsonInclude] public string Title;
+		[JsonInclude] public readonly string Title;
 		/// <summary>The Language of the bible</summary>
-		[JsonInclude] public string Language;
+		[JsonInclude] public readonly string Language;
 		/// <summary>The URL of the bible to download</summary>
-		[JsonInclude] public string URL;
+		[JsonInclude] public readonly string URL;
 		/// <summary>Indicates whether the bible edition is Aionian or not</summary>
-		[JsonInclude] public bool AionianEdition;
+		[JsonInclude] public readonly bool AionianEdition;
+		/// <summary>Constructor for the BibleLink type</summary>
+		public BibleLink(string title, string language, string url, bool aionianEdition)
+		{
+			Title = title;
+			Language = language;
+			URL = url;
+			AionianEdition = aionianEdition;
+		}
 		/// <summary>
 		/// Compares the other link with this link in terms of precedence in a sorted array
 		/// </summary>
 		/// <param name="other">The link to compare with</param>
 		/// <returns>A value denoting the precedence</returns>
-		public int CompareTo(BibleLink other) => Title.CompareTo(other.Title);
+		public virtual int CompareTo(BibleLink other) => Title.CompareTo(other.Title);
 		/// <summary>
 		/// Compares the other link with this link in terms of equality
 		/// </summary>
 		/// <param name="other">The link to compare with</param>
 		/// <returns>returns true if equal, otherwise false</returns>
-		public bool Equals(BibleLink other) => URL == other.URL;
+		public virtual bool Equals(BibleLink other) => URL == other.URL;
 		/// <summary>
 		/// Returns the equality of objects
 		/// </summary>
@@ -62,7 +70,10 @@ namespace Aionian
 			foreach (Match match in regex.Matches(responsestring))//For every regex match
 			{
 				GroupCollection caps = match.Groups;//Extract the captured groupes
-				_ = links.Add(new BibleLink() { Language = caps[1].Value, Title = caps[2].Value, AionianEdition = caps[3].Value == "Aionian", URL = (ResourceSite + caps[0].Value).Trim() });//Add to the list
+				_ = links.Add
+				(
+					new BibleLink(caps[2].Value, caps[1].Value, (ResourceSite + caps[0].Value).Trim(), caps[3].Value == "Aionian")
+				);//Add to the list
 			}
 			return links.ToArray();//Return the array of list
 		}
@@ -72,14 +83,14 @@ namespace Aionian
 		/// any requiements of the developer.
 		/// </summary>
 		/// <returns>The stream of the *.noia file is returned</returns>
-		public StreamReader DownloadStream() => new StreamReader(WebRequest.Create(URL).GetResponse().GetResponseStream());
+		public virtual StreamReader DownloadStream() => new StreamReader(WebRequest.Create(URL).GetResponse().GetResponseStream());
 		/// <summary>
 		/// Preview method for downloading and keeping track of progress of download
 		/// </summary>
 		/// <param name="progressChanged">The event called when the download progress is changed</param>
 		/// <param name="downloadDataCompleted">The event called when the download is completed</param>
 		/// <returns>Returns the FileStream of the .noia database of Bible</returns>
-		public async Task<StreamReader> DownloadStreamAsync(DownloadProgressChangedEventHandler progressChanged = null, DownloadDataCompletedEventHandler downloadDataCompleted = null)
+		public virtual async Task<StreamReader> DownloadStreamAsync(DownloadProgressChangedEventHandler progressChanged = null, DownloadDataCompletedEventHandler downloadDataCompleted = null)
 		{
 			WebClient client = new WebClient();
 			if (progressChanged != null) client.DownloadProgressChanged += progressChanged;
