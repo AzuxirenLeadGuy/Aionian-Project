@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aionian\Aionian.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Authors>AzuxirenLeadGuy</Authors>
+		<Company>Azuxiren</Company>
+		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
+		<Description>Package with basic boilerplate code to build Aionian Apps</Description>
+		<PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
+		<PackageOutputPath>../Nuget/</PackageOutputPath>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<Title>Aionian App Core</Title>
+		<Summary>Package for making Aionian Apps</Summary>
+		<Language>C#</Language>
+		<RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

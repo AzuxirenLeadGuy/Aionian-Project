@@ -6,15 +6,10 @@
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="icon.png" Pack="true" PackagePath="." />
-		<Content Include="AssetManagement.cs" />
-		<Content Include="WordSearcher.cs" />
-		<Content Include="ChapterDisplay.cs" />
-	</ItemGroup>
-	<ItemGroup>
 		<Content Include="ProgressBar.cs" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\Library\Aionian.csproj" />
+	  <ProjectReference Include="..\AionianApp.Core\AionianApp.Core.csproj" />
 	</ItemGroup>
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
@@ -22,7 +17,7 @@
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>1.1.0</Version>
+		<Version>2.0</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>

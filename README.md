@@ -11,28 +11,19 @@ The `BibleLink` struct which defines the bible link as provided in http://resour
 Provided with these are static utility methods, most importantly for getting all links from the website (link given above) and a method for deserializing the Bible struct from downloaded link
 
    
-	BibleLink[] links = BibleLink.GetAllUrlsFromWebsite();//Gets all download links available from the website
-	BibleLink mylink = links[0]; //Taking the first link
+	var links = BibleLink.GetAllUrlsFromWebsite();//Gets all download links available from the website
+	BibleLink mylink = links[0].Link; //Taking the first link
 	var stream = mylink.DownloadStream();//Downloads the stream of the bible database
 	var bible = Bible.ExtractBible(stream);//Now the bible is ready to use
 										   
-										   //Alternatively
+	//Alternatively, you can also use the following:
+	
 	var AnotherBible = Bible.ExtractBible(mylink.DownloadStream());//One line 
 	string verse = AnotherBible[BibleBook.John, 3, 16];
 
 By using a stream, there is an additional option of downloading the file by the URL in the `BibleLink` object and opening it via a `Stream` to load the Bible. There is now also an Async method for downloading the bible with events that are fired on the update on progress.
 
-The bible struct is also compatible to be serialized with Json, **provided the option `IncludeFields = true` is set.**
-	
-	//Prepare Option for Serializing
-	var options = new JsonSerializerOptions() { IncludeFields = true }
-
-	//Serialization Example
-	string SerializedBible = JsonSerializer.Serialize(BibleObject, options);
-
-	...
-	//Deserialization Example
-	var Bible = JsonSerializer.Deserialize<Bible>(SerializedBible, options);
+The bible struct can also be serialized in Json using `Newtonsoft.Json` package. The `System.Text.Json`package is incompatible since it cannot deal properly with `struct` types.
 
 You can add this package from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian/)
 
@@ -46,9 +37,34 @@ This is a basic terminal application (dotnet tool) to showcase the Aionian Libra
 
 Install it from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian.Terminal/)
 
+# Pending work and Contributing
+
+These are some of the major tasks that are to be done
+
+- Working on a cross-platform Aionian app (preferrably on the Uno platform)
+- Improving the Cross-refernces support
+- Any bug-fixes
+
+Help/feedback on any aspect of the project is always welcome.
+
 # Release Notes:
 
 ## Aionian Library
+
+v2.0
+
+- Separated the base `Aionian` project from `System.Text.Json` dependancy
+- Have all components of project as structs
+- Updated the resources site to a github fork, having more metadata
+- Add `RegionalBookName` to `Book`
+- Added experimental Cross-Reference support
+- Removed bugs due to a regex mistake, added better documentation
+- `BibleLink.GetAllUrlsFromWebsite()` method now returns a catalog of all downloads avaiable, along with the filesize
+
+v1.1
+* Made properties of `Bible`, `BibleLink` and `Book` to be readonly
+* Begin support for cross reference
+* Added xUnit Test cases
 
 v1.0.1.1
 *	Corrected Bible abstract IDictionary dependancy
@@ -62,6 +78,19 @@ v1.0.0.0
 *	First Release
 
 ## Aionian Tool
+
+v2.0
+
+- Added support of showing books in regional language
+- Bug "more books shown with limited bibles" resolved
+- Removed `ReadKey()` methods to support input/output redirection
+- "Download Assets" section now shows bible sizes
+- Better Console Progress bar
+- Added dependancy `AionianApp.Core`, which contains all basic support of the Terminal Tool
+- Removed `System.Text.Json` dependancy. Now uses `Newtonsoft.Json`
+
+v1.1
+* Removed bug which would crash the application on loading a chapter with missing verses (like Matthew 17:21)
 
 v1.0.1.0
 *	Reduced framework requirments;

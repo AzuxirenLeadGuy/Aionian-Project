@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Azuxiren.Aionian</PackageId>
+    <Version>2.0</Version>
+    <Authors>AzuxirenLeadGuy</Authors>
+    <Company>Azuxiren</Company>
+    <RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
+    <Description>Package to consume Bible resources provided by Aionian</Description>
+    <PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>
+    <PackageTags>Aionian;Bible;Package</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>../Nuget/</PackageOutputPath>
+    <DocumentationFile>../Wiki/Aionian.xml</DocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>Aionian Library</Title>
+    <Summary>Package for Aionian resources</Summary>
+    <PackageReleaseNotes>
+
+- Separated the base `Aionian` project from `System.Text.Json` dependancy
+- Have all components of project as structs
+- Updated the resources site to a github fork, having more metadata
+- Add `RegionalBookName` to `Book`
+- Added experimental Cross-Reference support
+- Removed bugs due to a regex mistake, added better documentation
+- `BibleLink.GetAllUrlsFromWebsite()` method now returns a catalog of all downloads avaiable, along with the filesize
+
+		</PackageReleaseNotes>
+    <Language>C#</Language>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="." />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="BibleBook.cs" />
+    <Content Include="Bible.cs" />
+    <Content Include="BibleLink.cs" />
+    <Content Include="Book.cs" />
+    <Content Include="CrossReference.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="cross_references\cross_references.txt" />
+  </ItemGroup>
+</Project>
