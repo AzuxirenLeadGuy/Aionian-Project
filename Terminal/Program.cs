@@ -8,12 +8,18 @@ using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Linq;
+
 namespace AionianApp.Terminal
 {
 	public class Program : CoreApp
 	{
 		public bool ExitPressed = false;
 		public static void Main() => new Program().Run();
+		private void PrintSep()
+		{
+			int len = Console.WindowWidth;
+			for (int i = 0; i < len; i++) Console.Write("=");
+		}
 		private void Run(/*string[] args*/)
 		{
 			Console.WriteLine("Welcome to the Aionian Bible.\nSoftware provided to you by Azuxiren\n\nPlease Wait while the assets are loaded");
@@ -34,8 +40,7 @@ namespace AionianApp.Terminal
 			//---Main Menu---
 			while (!ExitPressed)
 			{
-				int len = Console.WindowWidth;
-				for (int i = 0; i < len; i++) Console.Write("=");
+				PrintSep();
 				Console.WriteLine();
 				Console.WriteLine("\n1. Bible Chapter Reading\n2. Bible verse search \n3. Download Bible Modules \n4. Exit");
 				Console.WriteLine("Enter Your Choice: ");
@@ -57,30 +62,78 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
+				PrintSep();
 				Bible LoadedBible = LoadBible(AvailableBibles[--bible]);
-				foreach (Book bk in LoadedBible.Books.Values) Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
+				List<string> allBookNames = new List<string>();
+				int maxlength = 0, sno = 0;
+				foreach (Book bk in LoadedBible.Books.Values)
+				{
+					++sno;
+					string str = $"{sno}. {bk.RegionalBookName}";
+					allBookNames.Add(str);
+					maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
+				}// Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
+				int columns = Console.WindowWidth / maxlength;
+				if (columns < 2) foreach (string val in allBookNames) Console.WriteLine(val);
+				else
+				{
+					int j = 0;
+					while (sno > j)
+					{
+						for (int i = 0; i < columns && sno > j; i++)
+						{
+							Console.Write(allBookNames[j++].PadRight(maxlength));
+						}
+						Console.WriteLine();
+					}
+				}
 				Console.WriteLine("Enter ID of the Book to read: ");
 				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= 66 && LoadedBible.Books.ContainsKey((BibleBook)bookid))
 				{
-					Book Book = LoadedBible.Books[(BibleBook)bookid];
-					int len = Book.Chapter.Count;
-					if (len == 1)
-					{
-						DisplayChapter(Book.Chapter[1], Book.ShortBookName, 1);
-						goto skip;
-					}
+					byte chapter;
+					BibleBook id = (BibleBook)bookid;
+					int len = LoadedBible.Books[id].Chapter.Count;
+					if (len == 1) chapter = 1;
 					else
 					{
-						Console.Write($"This book contains {len} chapters. \nEnter Chapter number to read: ");
-						if (byte.TryParse(Console.ReadLine(), out byte chapter) && chapter >= 1 && chapter <= len)
+					akag: Console.Write($"This book contains {len} chapters. \nEnter Chapter number to read: ");
+						if (!byte.TryParse(Console.ReadLine(), out chapter) || chapter < 1 || chapter > len)
 						{
-							DisplayChapter(Book.Chapter[chapter], Book.ShortBookName, chapter);
-							goto skip;
+							Console.ForegroundColor = ConsoleColor.Red;
+							Console.WriteLine("Invalid Chapter! Try again...");
+							Console.ResetColor();
+							goto akag;
 						}
 					}
+				sr: LoadChapter(id, chapter);
+					DisplayChapter(LoadedChapter, Bible.ShortBookNames[bookid], chapter);
+					PrintSep();
+					Console.WriteLine("1. Read Next Chapter\n2.Read Previous Chapter\n3. Back to main menu");
+					if (byte.TryParse(Console.ReadLine(), out byte rgoption))
+					{
+						switch (rgoption)
+						{
+							case 3:
+								goto skip;
+							case 1:
+								NextChapter();
+								chapter = CurrentChapter;
+								id = CurrentBook;
+								goto sr;
+							case 2:
+								PreviousChapter();
+								chapter = CurrentChapter;
+								id = CurrentBook;
+								goto sr;
+							default: break;
+						}
+					}
+
 				}
 			}
+			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine("Recieved invalid input. Aborting process...");
+			Console.ResetColor();
 		skip:;
 			void DisplayAvailableBibles()
 			{

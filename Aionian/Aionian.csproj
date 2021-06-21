@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Azuxiren.Aionian</PackageId>
-    <Version>2.0</Version>
+    <Version>2.0.1</Version>
     <Authors>AzuxirenLeadGuy</Authors>
     <Company>Azuxiren</Company>
     <RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
@@ -13,7 +13,6 @@
     <PackageIcon>icon.png</PackageIcon>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>../Nuget/</PackageOutputPath>
-    <DocumentationFile>../Wiki/Aionian.xml</DocumentationFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Title>Aionian Library</Title>
     <Summary>Package for Aionian resources</Summary>
@@ -26,6 +25,7 @@
 - Added experimental Cross-Reference support
 - Removed bugs due to a regex mistake, added better documentation
 - `BibleLink.GetAllUrlsFromWebsite()` method now returns a catalog of all downloads avaiable, along with the filesize
+- Removed a critical bug while extracting Bibles
 
 		</PackageReleaseNotes>
     <Language>C#</Language>

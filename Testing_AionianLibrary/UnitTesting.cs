@@ -1,5 +1,6 @@
 using Aionian;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using Xunit;
 namespace TestingAionianLibrary
@@ -21,12 +22,20 @@ namespace TestingAionianLibrary
 			Assert.Equal("In the beginning God created the heavens and the earth.", englishBible[BibleBook.Genesis, 1, 1]);
 		}
 		[Fact]
-		public void TestName()
+		public void CrossReferenceTest()
 		{
 			CrossReferenceDatabase x = new();
 			x.ReadFromFile(40);
 			JsonSerializerOptions options = new() { IncludeFields = true };
 			File.WriteAllText("CR.json", JsonSerializer.Serialize(x.AllCrossReferences, options));
+		}
+		[Fact]
+		public void RegionalBookNameTest()
+		{
+			(BibleLink Link, ulong SizeInBytes)[] allLinks = BibleLink.GetAllUrlsFromWebsite();
+			BibleLink link = allLinks.Where((x) => x.Link.Language == "Albanian-Tosk").First().Link;
+			Bible bible = Bible.ExtractBible(link.DownloadStream());
+			Assert.Equal("1 i Samuelit", bible.Books[BibleBook.I_Samuel].RegionalBookName);
 		}
 	}
 }

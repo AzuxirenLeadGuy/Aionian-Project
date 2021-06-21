@@ -51,6 +51,10 @@ Help/feedback on any aspect of the project is always welcome.
 
 ## Aionian Library
 
+v2.0.1
+
+- Removed a critical bug while extracting Bibles
+
 v2.0
 
 - Separated the base `Aionian` project from `System.Text.Json` dependancy
@@ -78,6 +82,11 @@ v1.0.0.0
 *	First Release
 
 ## Aionian Tool
+
+v2.0.1
+
+- Chapterwise BookReading displays books much better
+- Allows switching chapters (Next/Previous)
 
 v2.0
 

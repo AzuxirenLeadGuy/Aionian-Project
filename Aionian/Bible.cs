@@ -77,14 +77,7 @@ namespace Aionian
 			string language = tl[1];
 			string title = tl[2];
 			Dictionary<BibleBook, string> RegionalName = new Dictionary<BibleBook, string>();
-			while ((line = stream.ReadLine())[0] == '#')
-			{
-				if (line.Contains("# Books:"))
-				{
-					string[] rn = line.Split('\t');
-					for (byte it = 1; it <= 66; it++) RegionalName.Add((BibleBook)it, rn[it]);
-				}
-			}
+			while ((_ = stream.ReadLine())[0] == '#') ;//Keep reading till you reach the header, which is also skipped
 			Dictionary<BibleBook, Book> books = new Dictionary<BibleBook, Book>();
 			while ((line = stream.ReadLine()) != null)
 			{
@@ -114,6 +107,11 @@ namespace Aionian
 						CurrentChapter = chapter;
 					}
 					CurrentChapterData[verseno] = verse;
+				}
+				else if (line.Contains("# BOOK"))
+				{
+					string[] parts = line.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+					RegionalName.Add((BibleBook)byte.Parse(parts[1]), parts[4]);
 				}
 			}
 			CurrentBookData[CurrentChapter] = CurrentChapterData;
