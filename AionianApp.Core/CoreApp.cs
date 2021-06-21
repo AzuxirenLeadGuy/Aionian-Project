@@ -106,11 +106,11 @@ namespace AionianApp
 		/// <param name="link">The link queried to load. Make sure this link exists</param>
 		/// <returns>The bible object deserialized from the asset file</returns>
 		protected Bible LoadBible(BibleLink link) => (Bible)(LoadedBible = LoadFileAsJson<Bible>(AssetFileName(link)));
-		/// <summary>
-		/// /// The currently loaded chapter.
-		/// </summary>
+		/// <summary>The currently loaded chapter. </summary>
 		public Dictionary<byte, string> LoadedChapter { get; protected set; }
+		/// <summary>The book of the loaded chapter. </summary>
 		public BibleBook CurrentBook { get; private set; }
+		/// <summary>The chapter number of the loaded chapter. </summary>
 		public byte CurrentChapter { get; private set; }
 		/// <summary>
 		/// Sets the `LoadedChapter` object with the given values
