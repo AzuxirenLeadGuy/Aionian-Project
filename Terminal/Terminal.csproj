@@ -17,7 +17,7 @@
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>2.0.1</Version>
+		<Version>2.0.1.1</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
@@ -31,16 +31,9 @@
 		<Summary>Terminal tool for Aionian</Summary>
 		<PackageReleaseNotes>
 
-- Added support of showing books in regional language
-- Bug "more books shown with limited bibles" resolved
-- Removed `ReadKey()` methods to support input/output redirection
-- "Download Assets" section now shows bible sizes
-- Better Console Progress bar
-- Added dependancy `AionianApp.Core`, which contains all basic support of the Terminal Tool
-- Removed `System.Text.Json` dependancy. Now uses `Newtonsoft.Json`
-- `BibleLink.GetAllUrlsFromWebsite()` method now returns a catalog of all downloads avaiable, along with the filesize
-- Chapterwise BookReading displays books much better
-- Allows switching chapters (Next/Previous)
+- Done Option formatting
+- Removed a bug on `NextChapter()` and `PreviousChapter()` methods
+- Made the "Back to main menu" option in `ReadChapter()` into "Back to book select"
 
 		</PackageReleaseNotes>
 		<Language>C#</Language>

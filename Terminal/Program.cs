@@ -62,18 +62,19 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
-				PrintSep();
 				Bible LoadedBible = LoadBible(AvailableBibles[--bible]);
 				List<string> allBookNames = new List<string>();
 				int maxlength = 0, sno = 0;
-				foreach (Book bk in LoadedBible.Books.Values)
+				foreach (BibleBook bk in CurrentAllBooks)
 				{
 					++sno;
-					string str = $"{sno}. {bk.RegionalBookName}";
+					string str = $"{sno}. {LoadedBible.Books[bk].RegionalBookName}";
 					allBookNames.Add(str);
 					maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
 				}// Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
 				int columns = Console.WindowWidth / maxlength;
+			bk:;
+				PrintSep();
 				if (columns < 2) foreach (string val in allBookNames) Console.WriteLine(val);
 				else
 				{
@@ -106,15 +107,15 @@ namespace AionianApp.Terminal
 						}
 					}
 				sr: LoadChapter(id, chapter);
-					DisplayChapter(LoadedChapter, Bible.ShortBookNames[bookid], chapter);
+					DisplayChapter(LoadedChapter, Bible.ShortBookNames[(byte)CurrentBook], CurrentChapter);
 					PrintSep();
-					Console.WriteLine("1. Read Next Chapter\n2.Read Previous Chapter\n3. Back to main menu");
+					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select");
 					if (byte.TryParse(Console.ReadLine(), out byte rgoption))
 					{
 						switch (rgoption)
 						{
 							case 3:
-								goto skip;
+								goto bk;
 							case 1:
 								NextChapter();
 								chapter = CurrentChapter;
@@ -128,13 +129,11 @@ namespace AionianApp.Terminal
 							default: break;
 						}
 					}
-
 				}
 			}
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine("Recieved invalid input. Aborting process...");
 			Console.ResetColor();
-		skip:;
 			void DisplayAvailableBibles()
 			{
 				int choice = 1;

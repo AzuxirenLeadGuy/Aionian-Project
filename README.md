@@ -44,81 +44,38 @@ These are some of the major tasks that are to be done
 - Working on a cross-platform Aionian app (preferrably on the Uno platform)
 - Improving the Cross-refernces support
 - Any bug-fixes
+- Typos and grammatical mistakes
 
 Help/feedback on any aspect of the project is always welcome.
 
 # Release Notes:
 
-## Aionian Library
-
-v2.0.1
-
-- Removed a critical bug while extracting Bibles
-
-v2.0
-
-- Separated the base `Aionian` project from `System.Text.Json` dependancy
-- Have all components of project as structs
-- Updated the resources site to a github fork, having more metadata
-- Add `RegionalBookName` to `Book`
-- Added experimental Cross-Reference support
-- Removed bugs due to a regex mistake, added better documentation
-- `BibleLink.GetAllUrlsFromWebsite()` method now returns a catalog of all downloads avaiable, along with the filesize
-
-v1.1
-* Made properties of `Bible`, `BibleLink` and `Book` to be readonly
-* Begin support for cross reference
-* Added xUnit Test cases
-
-v1.0.1.1
-*	Corrected Bible abstract IDictionary dependancy
-
-v1.0.1.0
-*	Reduced Target Framework requirements;
-*	Removed a bug causing potential memory leaks on BibleLink.GetAllUrlsFromWebsite();
-*	Made BibleLink Serialiazable with Json (System.Text.Json)
-
-v1.0.0.0 
-*	First Release
-
-## Aionian Tool
-
-v2.0.1
-
-- Chapterwise BookReading displays books much better
-- Allows switching chapters (Next/Previous)
-
-v2.0
-
-- Added support of showing books in regional language
-- Bug "more books shown with limited bibles" resolved
-- Removed `ReadKey()` methods to support input/output redirection
-- "Download Assets" section now shows bible sizes
-- Better Console Progress bar
-- Added dependancy `AionianApp.Core`, which contains all basic support of the Terminal Tool
-- Removed `System.Text.Json` dependancy. Now uses `Newtonsoft.Json`
-
-v1.1
-* Removed bug which would crash the application on loading a chapter with missing verses (like Matthew 17:21)
-
-v1.0.1.0
-*	Reduced framework requirments;
-*	Reduced dependancies; 
-*	Made the program code more readable and easier to debug;
-*	Corrected package to be tool
-
-v1.0.0.0 
-*	First Release
+- [Aionian Library](./Aionian/Release-Notes.md)
+- [Terminal Tool](./Terminal/Release-Notes.md)
 
 # Building
 
-Building both the projects requires dotnet-sdk, available for download from [Microsoft's dotnet-sdk official site](https://dotnet.microsoft.com/download)
+Building the projects requires dotnet-sdk, available for download from [Microsoft's dotnet-sdk official site](https://dotnet.microsoft.com/download). It is recommended to use the latest stable version of dotnet.
+The currently recommended version is [dotnet-sdk-5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
 
-Going to the each of the project's folder, use
+To generate executable of the terminal tool, run the following command
 
-	dotnet build
+    dotnet publish "path/to/Terminal.csproj" -f=net5.0 -c Release -o "path/of/output/files"
 
-to begin building. The nuget files are generated in the nuget folder.
+# Running
+
+To run the Terminal Tool, use the script `dotnet run -f=net5.0` for the `Terminal.csproj` Project file.
+
+# Packing
+
+Packing both the projects into `.nupkg` files
+
+At the project's root folder, where `Aionian.sln` is located, use the script
+
+	dotnet build -c Release
+
+to begin packing. The nuget files are generated in the folder `Nuget`.
+You can use the packages to add dependancy to your project, or install the terminal tool using `dotnet tool`
 
 # License/Copyright
 

@@ -105,11 +105,19 @@ namespace AionianApp
 		/// </summary>
 		/// <param name="link">The link queried to load. Make sure this link exists</param>
 		/// <returns>The bible object deserialized from the asset file</returns>
-		protected Bible LoadBible(BibleLink link) => (Bible)(LoadedBible = LoadFileAsJson<Bible>(AssetFileName(link)));
+		protected Bible LoadBible(BibleLink link)
+		{
+			LoadedBible = LoadFileAsJson<Bible>(AssetFileName(link));
+			CurrentAllBooks = LoadedBible.Value.Books.Keys.ToArray();
+			return LoadedBible.Value;
+		}
 		/// <summary>The currently loaded chapter. </summary>
 		public Dictionary<byte, string> LoadedChapter { get; protected set; }
+		/// <summary>An array of all books available in the Bible loaded by the <c>LoadBible</c> method</summary>
+		public BibleBook[] CurrentAllBooks { get; private set; }
 		/// <summary>The book of the loaded chapter. </summary>
-		public BibleBook CurrentBook { get; private set; }
+		public BibleBook CurrentBook => CurrentAllBooks[_currentBookIndex];
+		private byte _currentBookIndex;
 		/// <summary>The chapter number of the loaded chapter. </summary>
 		public byte CurrentChapter { get; private set; }
 		/// <summary>
@@ -119,7 +127,7 @@ namespace AionianApp
 		/// <param name="chapter">Selected chapter</param>
 		protected void LoadChapter(BibleBook book, byte chapter)
 		{
-			CurrentBook = book;
+			_currentBookIndex = (byte)Array.IndexOf(CurrentAllBooks, book);
 			CurrentChapter = chapter;
 			LoadedChapter = LoadedBible.Value.Books[CurrentBook].Chapter[CurrentChapter];
 		}
@@ -131,8 +139,8 @@ namespace AionianApp
 			else
 			{
 				CurrentChapter = 1;
-				if (CurrentBook != LoadedBible.Value.Books.Last().Key) CurrentBook++;
-				else CurrentBook = LoadedBible.Value.Books.First().Key;
+				if (_currentBookIndex != CurrentAllBooks.Length - 1) _currentBookIndex++;
+				else _currentBookIndex = 0;
 			}
 		}
 		/// <summary>Moves to the next chapter</summary>
@@ -142,8 +150,8 @@ namespace AionianApp
 			if (1 < CurrentChapter) CurrentChapter--;
 			else
 			{
-				if (CurrentBook != LoadedBible.Value.Books.First().Key) CurrentBook--;
-				else CurrentBook = LoadedBible.Value.Books.Last().Key;
+				if (_currentBookIndex != 0) _currentBookIndex--;
+				else _currentBookIndex = (byte)(CurrentAllBooks.Length - 1); ;
 				CurrentChapter = (byte)LoadedBible.Value.Books[CurrentBook].Chapter.Count;
 			}
 		}
