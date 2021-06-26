@@ -8,7 +8,9 @@ Before you begin:
 
 If you feel that there is some issue that isn't already raised, feel free to issue it.
 
-During contribution to code
+Check out the [Pending Work and Contribution](https://github.com/AzuxirenLeadGuy/Aionian-Project#pending-work-and-contributing) section to know the areas you can contribute
+
+All constructive contributions are welcome. Please keep the following in mind:
 
 - Please refrain from changing the data structures (Except the `CrossReferenceDatabase`, since that is still unused by the Core Application), as a lot of parsing depends upon the current structure.
 - Ensure that your added feature/change is tested in the XUnit testing project within the repository 
