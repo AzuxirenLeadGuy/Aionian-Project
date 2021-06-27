@@ -3,7 +3,6 @@ using Aionian;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace AionianApp
 {
@@ -96,64 +95,5 @@ namespace AionianApp
 		/// This is the text for the 'About Us' content.
 		/// </summary>
 		public const string AboutUsText = @"Aionian Bible app brought to you by Azuxiren. This app is made under CC-by-4.0 licence and comes with absolutly no guarantee";
-		/// <summary>
-		/// The bible to load verses from.
-		/// </summary>
-		protected Bible? LoadedBible;
-		/// <summary>
-		/// Loads the Bible from the asset
-		/// </summary>
-		/// <param name="link">The link queried to load. Make sure this link exists</param>
-		/// <returns>The bible object deserialized from the asset file</returns>
-		protected Bible LoadBible(BibleLink link)
-		{
-			LoadedBible = LoadFileAsJson<Bible>(AssetFileName(link));
-			CurrentAllBooks = LoadedBible.Value.Books.Keys.ToArray();
-			return LoadedBible.Value;
-		}
-		/// <summary>The currently loaded chapter. </summary>
-		public Dictionary<byte, string> LoadedChapter { get; protected set; }
-		/// <summary>An array of all books available in the Bible loaded by the <c>LoadBible</c> method</summary>
-		public BibleBook[] CurrentAllBooks { get; private set; }
-		/// <summary>The book of the loaded chapter. </summary>
-		public BibleBook CurrentBook => CurrentAllBooks[_currentBookIndex];
-		private byte _currentBookIndex;
-		/// <summary>The chapter number of the loaded chapter. </summary>
-		public byte CurrentChapter { get; private set; }
-		/// <summary>
-		/// Sets the `LoadedChapter` object with the given values
-		/// </summary>
-		/// <param name="book">BibleBook to load</param>
-		/// <param name="chapter">Selected chapter</param>
-		protected void LoadChapter(BibleBook book, byte chapter)
-		{
-			_currentBookIndex = (byte)Array.IndexOf(CurrentAllBooks, book);
-			CurrentChapter = chapter;
-			LoadedChapter = LoadedBible.Value.Books[CurrentBook].Chapter[CurrentChapter];
-		}
-		/// <summary>Moves to the next chapter</summary>
-		protected void NextChapter()
-		{
-			if (LoadedBible == null) throw new Exception("The method 'LoadChapter()' must be called before. Currently the `LoadedBible` variable is null");
-			if (LoadedBible.Value.Books[CurrentBook].Chapter.Count > CurrentChapter) CurrentChapter++;
-			else
-			{
-				CurrentChapter = 1;
-				if (_currentBookIndex != CurrentAllBooks.Length - 1) _currentBookIndex++;
-				else _currentBookIndex = 0;
-			}
-		}
-		/// <summary>Moves to the next chapter</summary>
-		protected void PreviousChapter()
-		{
-			if (LoadedBible == null) throw new Exception("The method 'LoadChapter()' must be called before. Currently the `LoadedBible` variable is null");
-			if (1 < CurrentChapter) CurrentChapter--;
-			else
-			{
-				if (_currentBookIndex != 0) _currentBookIndex--;
-				else _currentBookIndex = (byte)(CurrentAllBooks.Length - 1); ;
-				CurrentChapter = (byte)LoadedBible.Value.Books[CurrentBook].Chapter.Count;
-			}
-		}
 	}
 }

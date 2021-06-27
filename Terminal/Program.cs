@@ -62,13 +62,14 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
-				Bible LoadedBible = LoadBible(AvailableBibles[--bible]);
+				ChapterwiseBible chapterwiseBible = new ChapterwiseBible(LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible])));
 				List<string> allBookNames = new List<string>();
 				int maxlength = 0, sno = 0;
-				foreach (BibleBook bk in CurrentAllBooks)
+				var bookCopy=chapterwiseBible.LoadedBible.Value.Books;
+				foreach (BibleBook bk in chapterwiseBible.CurrentAllBooks)
 				{
 					++sno;
-					string str = $"{sno}. {LoadedBible.Books[bk].RegionalBookName}";
+					string str = $"{sno}. {bookCopy[bk].RegionalBookName}";
 					allBookNames.Add(str);
 					maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
 				}// Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
@@ -89,11 +90,11 @@ namespace AionianApp.Terminal
 					}
 				}
 				Console.WriteLine("Enter ID of the Book to read: ");
-				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= 66 && LoadedBible.Books.ContainsKey((BibleBook)bookid))
+				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= 66 && bookCopy.ContainsKey((BibleBook)bookid))
 				{
 					byte chapter;
 					BibleBook id = (BibleBook)bookid;
-					int len = LoadedBible.Books[id].Chapter.Count;
+					int len = bookCopy[id].Chapter.Count;
 					if (len == 1) chapter = 1;
 					else
 					{
@@ -106,25 +107,27 @@ namespace AionianApp.Terminal
 							goto akag;
 						}
 					}
-				sr: LoadChapter(id, chapter);
-					DisplayChapter(LoadedChapter, Bible.ShortBookNames[(byte)CurrentBook], CurrentChapter);
+				sr: chapterwiseBible.LoadChapter(id, chapter);
+					DisplayChapter(chapterwiseBible.LoadedChapter, Bible.ShortBookNames[(byte)chapterwiseBible.CurrentBook], chapterwiseBible.CurrentChapter);
 					PrintSep();
-					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select");
+					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select\n4. Back to main menu");
 					if (byte.TryParse(Console.ReadLine(), out byte rgoption))
 					{
 						switch (rgoption)
 						{
 							case 3:
 								goto bk;
+							case 4:
+								goto skip;
 							case 1:
-								NextChapter();
-								chapter = CurrentChapter;
-								id = CurrentBook;
+								chapterwiseBible.NextChapter();
+								chapter = chapterwiseBible.CurrentChapter;
+								id = chapterwiseBible.CurrentBook;
 								goto sr;
 							case 2:
-								PreviousChapter();
-								chapter = CurrentChapter;
-								id = CurrentBook;
+								chapterwiseBible.PreviousChapter();
+								chapter = chapterwiseBible.CurrentChapter;
+								id = chapterwiseBible.CurrentBook;
 								goto sr;
 							default: break;
 						}
@@ -134,6 +137,7 @@ namespace AionianApp.Terminal
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine("Recieved invalid input. Aborting process...");
 			Console.ResetColor();
+		skip:;
 			void DisplayAvailableBibles()
 			{
 				int choice = 1;
@@ -301,7 +305,7 @@ namespace AionianApp.Terminal
 				Console.WriteLine("\nEnter the bible to load: ");
 				if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 				{
-					Bible MyBible = LoadBible(AvailableBibles[--bible]);
+					Bible MyBible = LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible]));
 					Console.WriteLine("Starting Search. Please wait...");
 					SearchMode mode = input == '1' ? SearchMode.MatchAnyWord : (input == '2' ? SearchMode.MatchAllWords : SearchMode.Regex);
 					SearchQuery search = new SearchQuery(inputline, mode);

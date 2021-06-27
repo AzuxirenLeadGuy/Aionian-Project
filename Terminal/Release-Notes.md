@@ -1,10 +1,11 @@
 # Release Notes
 
-v2.0.1.1 [Not released in nuget yet]
+v2.0.1.1
 
 - Fixed bug on changing chapters using `NextChapter()` and `PreviousChapter()` methods.
 - "Back to main menu" function is replaced with "Back to book select"
 - A bit of text formatting
+- Added changes to Core app for to support `ChapterwiseBible` struct for better organization
 
 v2.0.1
 

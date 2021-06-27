@@ -34,6 +34,7 @@
 - Done Option formatting
 - Removed a bug on `NextChapter()` and `PreviousChapter()` methods
 - Made the "Back to main menu" option in `ReadChapter()` into "Back to book select"
+- Added changes to Core app for to support `ChapterwiseBible` struct for better organization
 
 		</PackageReleaseNotes>
 		<Language>C#</Language>
