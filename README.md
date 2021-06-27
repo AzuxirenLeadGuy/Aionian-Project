@@ -44,7 +44,7 @@ These are some of the major tasks that are to be done
 - Working on a cross-platform Aionian app (preferrably on the Uno platform)
 - Improving the Cross-refernces support
 - Populating the XUnit tests for the existing `Aionian` and `AionianApp.Core` projects.
-- Creating a helpful wiki page
+- Creating a helpful wiki and/or Github page
 - Any bug-fixes
 - Typos and grammatical mistakes
 
