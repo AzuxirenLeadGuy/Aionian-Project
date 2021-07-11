@@ -15,4 +15,5 @@ All constructive contributions are welcome. Please keep the following in mind:
 - Please refrain from changing the data structures (Except the `CrossReferenceDatabase`, since that is still unused by the Core Application), as a lot of parsing depends upon the current structure.
 - Ensure that your added feature/change is tested in the XUnit testing project within the repository 
 - Describe your changes clearly while creating the Pull Request.
+- Enable the `.gitignore` extension and write code according to the described style/standards
 - Be polite and respectful during discussions
