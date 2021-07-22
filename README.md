@@ -35,7 +35,7 @@ This is a basic terminal application (dotnet tool) to showcase the Aionian Libra
 2) Bible word search
 3) Download/Manage any Aionian bible package
 
-Install it from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian.Terminal/)
+You can install it from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian.Terminal/)
 
 # Pending work and Contributing
 
