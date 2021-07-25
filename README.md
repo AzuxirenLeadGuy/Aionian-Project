@@ -67,7 +67,7 @@ To generate executable of the terminal tool, run the following command
 
 # Running
 
-To run the Terminal Tool, use the script `dotnet run -f=net5.0` for the `Terminal.csproj` Project file.
+To build and run the Terminal Tool, use the script `dotnet run -f=net5.0` for the `Terminal.csproj` Project file.
 
 # Packing
 
