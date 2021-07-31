@@ -5,6 +5,7 @@ Thank you for your interest in adding your contributions to this project.
 Before you begin:
 - Go through the Code of Conduct.
 - Check out existing issues.
+- Star this repository.
 
 If you feel that there is some issue that isn't already raised, feel free to issue it.
 
