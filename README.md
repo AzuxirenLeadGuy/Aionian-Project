@@ -48,6 +48,7 @@ These are some of the major tasks that are to be done
 - Creating a helpful wiki and/or Github page
 - Any bug-fixes
 - Typos and grammatical mistakes
+- Raising an Issue for any existing bug, or a feature/idea
 
 Help/feedback on any aspect of the project is always welcome.
 
