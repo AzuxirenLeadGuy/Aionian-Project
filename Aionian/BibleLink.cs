@@ -3,6 +3,9 @@ using System.IO;
 using System.Net;
 using System;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Threading;
+
 namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
@@ -42,7 +45,7 @@ namespace Aionian
 		/// </summary>
 		/// <param name="obj">The object to compare</param>
 		/// <returns>returns true if equal, otherwise false</returns>
-		public override bool Equals(object obj) => obj is BibleLink x && Equals(x);
+		public override bool Equals(object? obj) => obj != null && obj is BibleLink x && Equals(x);
 		/// <summary>
 		/// Returns Hash Code
 		/// </summary>
@@ -60,12 +63,15 @@ namespace Aionian
 		public static (BibleLink Link, ulong SizeInBytes)[] GetAllUrlsFromWebsite()
 		{
 			string ResourceSite = @"https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/";
-			List<(BibleLink Link, ulong SizeInBytes)> links = new List<(BibleLink Link, ulong SizeInBytes)>();
-			using (StreamReader sr = new StreamReader(WebRequest.Create(ResourceSite + "Content.txt").GetResponse().GetResponseStream()))
+			List<(BibleLink Link, ulong SizeInBytes)> links = new();
+			string base_url = ResourceSite + "Content.txt";
+			HttpClient clinet = new();
+			using (StreamReader sr = new(clinet.GetStreamAsync(base_url).Result))
 			{
 				while (!sr.EndOfStream)
 				{
-					string[] responsestring = sr.ReadLine().Split('\t');
+					string[]? responsestring = sr.ReadLine()?.Split('\t');
+					if (responsestring == null) throw new ArgumentException("Unable to parse data from online dataset");
 					string url = ResourceSite + responsestring[0];
 					ulong size = ulong.Parse(responsestring[1]);
 					bool aionianEdition = responsestring[0].EndsWith("Aionian-Edition.noia");
@@ -89,20 +95,43 @@ namespace Aionian
 		/// Bible downloadedBible = Bible.ExtractBible(link.DownloadStream()); //Convert the downloaded .noia file into a Bible
 		/// </code>
 		/// </example>
-		public StreamReader DownloadStream() => new StreamReader(WebRequest.Create(URL).GetResponse().GetResponseStream());
+		public StreamReader DownloadStream() => new(new HttpClient().GetStreamAsync(URL).Result);
+
 		/// <summary>
 		/// Preview method for downloading and keeping track of progress of download
 		/// </summary>
-		/// <param name="progressChanged">The event called when the download progress is changed</param>
-		/// <param name="downloadDataCompleted">The event called when the download is completed</param>
+		/// <param name="handler">The event called when the download progress is changed</param>
+		/// <param name="cancellationToken">The event called when the download is completed</param>
 		/// <returns>Returns the FileStream of the .noia database of Bible</returns>
-		public async Task<StreamReader> DownloadStreamAsync(DownloadProgressChangedEventHandler progressChanged = null, DownloadDataCompletedEventHandler downloadDataCompleted = null)
+		public async Task<StreamReader> DownloadStreamAsync(HttpMessageHandler handler, CancellationToken cancellationToken = default)
 		{
-			WebClient client = new WebClient();
-			if (progressChanged != null) client.DownloadProgressChanged += progressChanged;
-			if (downloadDataCompleted != null) client.DownloadDataCompleted += downloadDataCompleted;
-			string result = await client.DownloadStringTaskAsync(new Uri(URL));
-			return new StreamReader(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(result)));
+			using HttpClient client = new(handler);
+			Stream st = await client.GetStreamAsync(URL, cancellationToken);
+			return new StreamReader(st);
 		}
+		/// <summary>Compares the two instances</summary>
+		/// <param name="left">BibleLink instance</param>
+		/// <param name="right">BibleLink instance</param>
+		public static bool operator ==(BibleLink left, BibleLink right) => left.Equals(right);
+		/// <summary>Compares the two instances</summary>
+		/// <param name="left">BibleLink instance</param>
+		/// <param name="right">BibleLink instance</param>
+		public static bool operator !=(BibleLink left, BibleLink right) => !(left == right);
+		/// <summary>Compares the two instances</summary>
+		/// <param name="left">BibleLink instance</param>
+		/// <param name="right">BibleLink instance</param>
+		public static bool operator <(BibleLink left, BibleLink right) => left.CompareTo(right) < 0;
+		/// <summary>Compares the two instances</summary>
+		/// <param name="left">BibleLink instance</param>
+		/// <param name="right">BibleLink instance</param>
+		public static bool operator <=(BibleLink left, BibleLink right) => left.CompareTo(right) <= 0;
+		/// <summary>Compares the two instances</summary>
+		/// <param name="left">BibleLink instance</param>
+		/// <param name="right">BibleLink instance</param>
+		public static bool operator >(BibleLink left, BibleLink right) => left.CompareTo(right) > 0;
+		/// <summary>Compares the two instances</summary>
+		/// <param name="left">BibleLink instance</param>
+		/// <param name="right">BibleLink instance</param>
+		public static bool operator >=(BibleLink left, BibleLink right) => left.CompareTo(right) >= 0;
 	}
 }

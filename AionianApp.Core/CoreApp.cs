@@ -11,23 +11,20 @@ namespace AionianApp
 	/// </summary>
 	public class CoreApp
 	{
-		/// <summary>The object of the currently executing CoreApp</summary>
-		public static CoreApp current;
 		/// <summary>
 		/// Default and the only constructor for CoreApp.
 		/// **Ensure that <c>AvailableBibles</c> contains links. Otherwise prompt the user to download resources**
 		/// </summary>
 		public CoreApp()
 		{
-			current = this;
 			if (!Directory.Exists(AppDataFolderPath)) _ = Directory.CreateDirectory(AppDataFolderPath);
 			if (!File.Exists(AssetMainFilePath)) SaveAssetLog();
-			else AvailableBibles = LoadFileAsJson<List<BibleLink>>(AssetMainFilePath);
+			else AvailableBibles = LoadFileAsJson<List<BibleLink>>(AssetMainFilePath) ?? throw new Exception("Unable to load assets!");
 		}
 		/// <summary>
 		/// This list stores the available bibles this app has downloaded in its system
 		/// </summary>
-		protected readonly List<BibleLink> AvailableBibles = new List<BibleLink>();
+		protected readonly List<BibleLink> AvailableBibles = new();
 		/// <summary>
 		/// This is the folder path where the Application stores the downloaded files at
 		/// </summary>
@@ -85,7 +82,7 @@ namespace AionianApp
 		/// <param name="filename">File path of the file to deserialize and load object from</param>
 		/// <typeparam name="T">The type of file to load</typeparam>
 		/// <returns>(T) The file loaded from the asset file</returns>
-		protected T LoadFileAsJson<T>(string filename) => JsonConvert.DeserializeObject<T>(File.ReadAllText(AssetFilePath(filename)));
+		protected T? LoadFileAsJson<T>(string filename) => JsonConvert.DeserializeObject<T>(File.ReadAllText(AssetFilePath(filename)));
 		/// <summary>
 		/// Contains a string of the names of the books. Use this as an option for "Select the book of bible"
 		/// </summary>

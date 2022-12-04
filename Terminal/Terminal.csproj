@@ -3,6 +3,7 @@
 	<ItemGroup>
 		<PackageReference Include="ConsoleTables" Version="2.4.2" />
 		<Content Include="Program.cs" />
+		<PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="icon.png" Pack="true" PackagePath="." />
@@ -13,11 +14,11 @@
 	</ItemGroup>
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netcoreapp2.1;netcoreapp3.1;net5.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>2.0.1.1</Version>
+		<Version>2.1</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>

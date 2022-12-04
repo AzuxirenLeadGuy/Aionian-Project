@@ -22,7 +22,7 @@ namespace Aionian
 		/// <summary> Returns the current BibleBook enum of this chapter </summary>
 		public BibleBook CurrentBibleBook => (BibleBook)BookIndex;
 		/// <summary> The name of the book in English</summary>
-		public string BookName => Enum.GetName(typeof(BibleBook), (BibleBook)BookIndex);
+		public string BookName => Enum.GetName(typeof(BibleBook), (BibleBook)BookIndex) ?? throw new ArgumentException("Enum cannot be parsed!");
 		/// <summary> The Short name of the book </summary>
 		public string ShortBookName => Bible.ShortBookNames[BookIndex];
 	}

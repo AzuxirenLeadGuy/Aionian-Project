@@ -38,7 +38,7 @@ namespace Aionian
 		/// </summary>
 		/// <param name="obj">The other reference to compare</param>
 		/// <returns>Boolean result indicating if both are equal</returns>
-		public override bool Equals(object obj) => obj is BibleReference reference && Equals(reference);
+		public override bool Equals(object? obj) => obj is BibleReference reference && Equals(reference);
 		/// <summary>Compares a BibleRegion to this BibleReference. It is true only if the region consists of only a single verse, which is the other BibleReference</summary>
 		/// <param name="other">The BibleRegion to compare</param>
 		/// <returns>boolean value indicating that both are equivalent</returns>
@@ -94,7 +94,7 @@ namespace Aionian
 		/// <summary>Compares object for equality</summary>
 		/// <param name="obj">object to compare</param>
 		/// <returns>boolean value indicating equality</returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			if (obj is BibleReference reference) return Equals(reference);
 			else if (obj is BibleRegion bregion) return Equals(bregion);
@@ -164,6 +164,36 @@ namespace Aionian
 		/// <param name="other">The other cross-reference to compare</param>
 		/// <returns>boolean value indicating equality</returns>
 		public bool Equals(CrossReference other) => Source.Equals(other.Source) && Destination.Equals(other.Destination);
+		/// <summary>Compares two Cross-references</summary>
+		/// <param name="obj">The other cross-reference to compare</param>
+		/// <returns>boolean value indicating equality</returns>
+		public override bool Equals(object? obj) => obj is CrossReference reference && Equals(reference);
+		/// <inheritdoc/>
+		public override int GetHashCode() => Source.GetHashCode();
+		/// <summary>Compares the two instances </summary>
+		/// <param name="left">CrossReference instance</param>
+		/// <param name="right">CrossReference instance</param>
+		public static bool operator ==(CrossReference left, CrossReference right) => left.Equals(right);
+		/// <summary>Compares the two instances </summary>
+		/// <param name="left">CrossReference instance</param>
+		/// <param name="right">CrossReference instance</param>
+		public static bool operator !=(CrossReference left, CrossReference right) => !(left == right);
+		/// <summary>Compares the two instances </summary>
+		/// <param name="left">CrossReference instance</param>
+		/// <param name="right">CrossReference instance</param>
+		public static bool operator <(CrossReference left, CrossReference right) => left.CompareTo(right) < 0;
+		/// <summary>Compares the two instances </summary>
+		/// <param name="left">CrossReference instance</param>
+		/// <param name="right">CrossReference instance</param>
+		public static bool operator <=(CrossReference left, CrossReference right) => left.CompareTo(right) <= 0;
+		/// <summary>Compares the two instances </summary>
+		/// <param name="left">CrossReference instance</param>
+		/// <param name="right">CrossReference instance</param>
+		public static bool operator >(CrossReference left, CrossReference right) => left.CompareTo(right) > 0;
+		/// <summary>Compares the two instances </summary>
+		/// <param name="left">CrossReference instance</param>
+		/// <param name="right">CrossReference instance</param>
+		public static bool operator >=(CrossReference left, CrossReference right) => left.CompareTo(right) >= 0;
 	}
 	/// <summary>
 	/// The database of all the cross-references in a bible, taken from OpenBible.info
@@ -174,7 +204,7 @@ namespace Aionian
 		/// <summary>
 		/// Contains all crossreference as a Dictionary
 		/// </summary>
-		public SortedSet<CrossReference> AllCrossReferences;
+		public SortedSet<CrossReference> AllCrossReferences = new();
 		internal readonly string[] BookNames =
 		{
 			"", "Gen", "Exod", "Lev", "Num", "Deut", "Josh", "Judg", "Ruth", "1Sam", "2Sam", "1Kgs", "2Kgs", "1Chr", "2Chr", "Ezra", "Neh", "Esth", "Job", "Ps", "Prov", "Eccl", "Song", "Isa", "Jer", "Lam", "Ezek", "Dan", "Hos", "Joel", "Amos", "Obad", "Jonah", "Mic", "Nah", "Hab", "Zeph", "Hag", "Zech", "Mal", "Matt", "Mark", "Luke", "John", "Acts", "Rom", "1Cor", "2Cor", "Gal", "Eph", "Phil", "Col", "1Thess", "2Thess", "1Tim", "2Tim", "Titus", "Phlm", "Heb", "Jas", "1Pet", "2Pet", "1John", "2John", "3John", "Jude", "Rev"
@@ -185,15 +215,18 @@ namespace Aionian
 		/// <param name="treshold">The minimum number of votes to be considered added in list</param>
 		public void ReadFromFile(int treshold)
 		{
-			using (StreamReader stream = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("Aionian.cross_references.cross_references.txt")))
+			Stream? s = Assembly.GetExecutingAssembly().GetManifestResourceStream("Aionian.cross_references.cross_references.txt");
+			if (s == null)
+				throw new Exception("Cross-references are not loaded as embedded resource!");
+			using (StreamReader stream = new(s))
 			{
-				AllCrossReferences = new SortedSet<CrossReference>();
 				_ = stream.ReadLine();//Ignore the first header line
-				List<BibleRegion> AllVerses = new List<BibleRegion>();
-				BibleReference prevSource = new BibleReference() { Book = BibleBook.NULL, Chapter = 0, Verse = 0 };
+				List<BibleRegion> AllVerses = new();
+				BibleReference prevSource = new() { Book = BibleBook.NULL, Chapter = 0, Verse = 0 };
 				while (!stream.EndOfStream)
 				{
-					string[] row = stream.ReadLine().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+					string[]? row = stream.ReadLine()?.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+					if (row == null) throw new Exception("Stream format is incorrect!");
 					if (int.Parse(row[2]) >= treshold)
 					{
 						BibleReference currentSource = ParseReference(row[0]);
@@ -206,7 +239,7 @@ namespace Aionian
 							}
 							prevSource = currentSource;
 						}
-						if (row[1].Contains("-"))
+						if (row[1].Contains('-'))
 						{
 							string[] region = row[1].Split('-');
 							AllVerses.Add(new BibleRegion(ParseReference(region[0]), ParseReference(region[1])));

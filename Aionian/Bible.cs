@@ -66,19 +66,21 @@ namespace Aionian
 		/// <returns>The initiated Bible from the stream is returned</returns>
 		public static Bible ExtractBible(StreamReader stream)
 		{
-			string line;
+			string? line;
 			byte CurrentChapter = 255;
 			BibleBook CurrentBook = BibleBook.NULL;
-			Dictionary<byte, Dictionary<byte, string>> CurrentBookData = null;
-			Dictionary<byte, string> CurrentChapterData = null;
+			Dictionary<byte, Dictionary<byte, string>> CurrentBookData = null!;
+			Dictionary<byte, string> CurrentChapterData = null!;
 			line = stream.ReadLine();//Read the first line containing file name
+			if (line == null) throw new ArgumentException("Unable to parse data from stream!");
 			bool aionianEdition = line.EndsWith("Aionian-Edition.noia");
 			string[] tl = line.Replace("---", "|").Split('|');
 			string language = tl[1];
 			string title = tl[2];
-			Dictionary<BibleBook, string> RegionalName = new Dictionary<BibleBook, string>();
-			while ((_ = stream.ReadLine())[0] == '#') ;//Keep reading till you reach the header, which is also skipped
-			Dictionary<BibleBook, Book> books = new Dictionary<BibleBook, Book>();
+			Dictionary<BibleBook, string> RegionalName = new();
+			while ((line = stream.ReadLine()) != null && line[0] == '#') ;//Keep reading till you reach the header, which is also skipped
+			if (line == null) throw new ArgumentException("Unable to parse data from stream!");
+			Dictionary<BibleBook, Book> books = new();
 			while ((line = stream.ReadLine()) != null)
 			{
 				if (line[0] == '0')//The valid lines of the database begin with 0, not with # or INDEX (header row)

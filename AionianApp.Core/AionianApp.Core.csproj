@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>

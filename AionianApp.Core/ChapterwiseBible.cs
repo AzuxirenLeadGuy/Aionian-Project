@@ -27,7 +27,7 @@ namespace AionianApp
 			LoadChapter(CurrentAllBooks[0], 1);
 		}
 		/// <summary>The currently loaded chapter. </summary>
-		public Dictionary<byte, string> LoadedChapter { get; private set; }
+		public Dictionary<byte, string>? LoadedChapter { get; private set; }
 		/// <summary>An array of all books available in the Bible loaded by the <c>LoadBible</c> method</summary>
 		public BibleBook[] CurrentAllBooks { get; private set; }
 		/// <summary>The book of the loaded chapter. </summary>
@@ -42,6 +42,7 @@ namespace AionianApp
 		/// <param name="chapter">Selected chapter</param>
 		public void LoadChapter(BibleBook book, byte chapter)
 		{
+			if (LoadedBible == null) throw new ArgumentException("Bible is not loaded!");
 			if (!LoadedBible.Value.Books.ContainsKey(book)) throw new ArgumentException("This book does not exist in this Bible", nameof(book));
 			_currentBookIndex = (byte)Array.IndexOf(CurrentAllBooks, book);
 			CurrentChapter = chapter;

@@ -70,11 +70,11 @@ namespace AionianApp
 			switch (Mode)
 			{
 				case SearchMode.MatchAnyWord:
-					query = new StringBuilder("(").Append(query).Replace(" ", ")|(").Append(")").ToString();//Use regex that matches any one of the words
+					query = new StringBuilder("(").Append(query).Replace(" ", ")|(").Append(')').ToString();//Use regex that matches any one of the words
 					break;
 				case SearchMode.MatchAllWords:
 					string[] words = query.Split(separator: new char[] { ' ' }, options: StringSplitOptions.RemoveEmptyEntries);
-					StringBuilder regexpreparer = new StringBuilder();
+					StringBuilder regexpreparer = new();
 					foreach (string word in words) _ = regexpreparer.Append($"(?=.*\\b{word}\\b)");
 					query = regexpreparer.Append("(^.*$)").ToString();
 					break;
@@ -92,9 +92,9 @@ namespace AionianApp
 		/// <param name="onProgressUpdate">The IProgress</param>
 		/// <param name="ct">The CancellationToken</param>
 		/// <returns></returns>
-		public IEnumerable<BibleReference> GetResults(Bible searchBible, bool ignoreCase = true, IProgress<float> onProgressUpdate = null, CancellationToken ct = default)
+		public IEnumerable<BibleReference> GetResults(Bible searchBible, bool ignoreCase = true, IProgress<float>? onProgressUpdate = null, CancellationToken ct = default)
 		{
-			Regex r = new Regex(SearchString, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
+			Regex r = new(SearchString, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
 			float CurrentProgress = 0, ProgressInc = 1.0f / 66.0f;
 			foreach (KeyValuePair<BibleBook, Book> bk in searchBible.Books)
 			{
