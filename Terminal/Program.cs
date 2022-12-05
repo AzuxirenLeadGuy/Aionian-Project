@@ -5,9 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Handlers;
 
 namespace AionianApp.Terminal
 {
@@ -15,11 +16,12 @@ namespace AionianApp.Terminal
 	{
 		public bool ExitPressed = false;
 		public static void Main() => new Program().Run();
-		private void PrintSep()
+		private static void PrintSep()
 		{
 			int len = Console.WindowWidth;
 			for (int i = 0; i < len; i++) Console.Write("=");
 		}
+		public static string RL() => Console.ReadLine() ?? throw new Exception("Expected non-null console input!");
 		private void Run(/*string[] args*/)
 		{
 			Console.WriteLine("Welcome to the Aionian Bible.\nSoftware provided to you by Azuxiren\n\nPlease Wait while the assets are loaded");
@@ -43,8 +45,8 @@ namespace AionianApp.Terminal
 				PrintSep();
 				Console.WriteLine();
 				Console.WriteLine("\n1. Bible Chapter Reading\n2. Bible verse search \n3. Download Bible Modules \n4. Exit");
-				Console.WriteLine("Enter Your Choice: ");
-				switch (Console.ReadLine()[0])
+				Console.WriteLine("Enter Your Choice: "); ;
+				switch (RL()[0])
 				{
 					case '1': ChapterDisplay(); break;
 					case '2': WordSearcher(); break;
@@ -62,10 +64,11 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
-				ChapterwiseBible chapterwiseBible = new ChapterwiseBible(LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible])));
-				List<string> allBookNames = new List<string>();
+				ChapterwiseBible chapterwiseBible = new(LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible])));
+				List<string> allBookNames = new();
 				int maxlength = 0, sno = 0;
-				var bookCopy=chapterwiseBible.LoadedBible.Value.Books;
+				var loaded_bible = chapterwiseBible.LoadedBible ?? throw new ArgumentException("Unable to process the loaded bible!");
+				var bookCopy = loaded_bible.Books;
 				foreach (BibleBook bk in chapterwiseBible.CurrentAllBooks)
 				{
 					++sno;
@@ -108,7 +111,8 @@ namespace AionianApp.Terminal
 						}
 					}
 				sr: chapterwiseBible.LoadChapter(id, chapter);
-					DisplayChapter(chapterwiseBible.LoadedChapter, Bible.ShortBookNames[(byte)chapterwiseBible.CurrentBook], chapterwiseBible.CurrentChapter);
+					Dictionary<byte, string> chap = chapterwiseBible.LoadedChapter ?? throw new ArgumentException("Chapter is null");
+					DisplayChapter(chap, Bible.ShortBookNames[(byte)chapterwiseBible.CurrentBook], chapterwiseBible.CurrentChapter);
 					PrintSep();
 					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select\n4. Back to main menu");
 					if (byte.TryParse(Console.ReadLine(), out byte rgoption))
@@ -141,7 +145,7 @@ namespace AionianApp.Terminal
 			void DisplayAvailableBibles()
 			{
 				int choice = 1;
-				ConsoleTable table = new ConsoleTable("ID", "Title", "Language", "Version");
+				ConsoleTable table = new("ID", "Title", "Language", "Version");
 				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 				table.Write();
 			}
@@ -163,11 +167,11 @@ namespace AionianApp.Terminal
 				DisplayAvailableBibles();
 			}
 			Console.WriteLine("\n1. Add a Bible\n2. Remove a Bible\n3. Remove All Bibles and Data\nPress any other key to go back to main menu\nEnter your choice : ");
-			switch (Console.ReadLine()[0])
+			switch (RL()[0])
 			{
 				case '1':
 					Console.WriteLine("Fetching data from server. Please wait...");
-					BibleLink[] list = null;
+					BibleLink[]? list = null;
 					int files;
 					try { list = DisplayDownloadable(); }
 					catch (Exception e) { Console.WriteLine(e.Message); }
@@ -176,8 +180,8 @@ namespace AionianApp.Terminal
 					{
 						Console.WriteLine("Enter the ID(s) of the bible to download (Multiple IDs are to be separted by space");
 						files = 0;
-						object lockobject = new object();
-						foreach (string Id in Console.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries))
+						object lockobject = new();
+						foreach (string Id in RL().Split(' ', StringSplitOptions.RemoveEmptyEntries))
 						{
 							if (int.TryParse(Id, out int x) && x >= 1 && x <= list.Length)
 							{
@@ -186,10 +190,13 @@ namespace AionianApp.Terminal
 								else
 								{
 									Console.WriteLine($"Downloading file: {AssetFileName(link)}");
-									ConsoleProgressBar progressBar = new ConsoleProgressBar((byte)(Console.WindowWidth / 2));
+									ConsoleProgressBar progressBar = new((byte)(Console.WindowWidth / 2));
+									ProgressMessageHandler handler = new(new HttpClientHandler() { AllowAutoRedirect = true });
 									try
 									{
-										Bible downloadedbible = Bible.ExtractBible(link.DownloadStreamAsync(OnDownloadProgress, OnDownloadComplete).Result);
+										handler.HttpReceiveProgress += OnDownloadProgress;
+										progressBar.Write();
+										Bible downloadedbible = Bible.ExtractBible(link.DownloadStreamAsync(handler).Result);
 										SaveFileAsJson(downloadedbible, AssetFileName(downloadedbible));
 										files++;
 										AvailableBibles.Add(link);
@@ -197,25 +204,18 @@ namespace AionianApp.Terminal
 									}
 									catch (Exception e)
 									{
-										Debug.WriteLine(e.Message);
+										Console.WriteLine(e.Message);
 										Console.WriteLine("\n\nUnexpected Error");
 									}
-									void OnDownloadProgress(object o, DownloadProgressChangedEventArgs e)
+									void OnDownloadProgress(object? o, HttpProgressEventArgs e)
 									{
-										lock (lockobject)
+										// lock (lockobject)
 										{
 											progressBar.Percentage = (byte)e.ProgressPercentage;
 											progressBar.Write();
 										}
-									}
-									void OnDownloadComplete(object o, DownloadDataCompletedEventArgs e)
-									{
-										lock (lockobject)
-										{
-											progressBar.Percentage = 100;
-											progressBar.Write();
-										}
-										Console.WriteLine("\nFile Download Complete.");
+										if (progressBar.Percentage == 100)
+											Console.WriteLine("\nFile Download Complete.");
 									}
 								}
 							}
@@ -227,7 +227,7 @@ namespace AionianApp.Terminal
 				case '2':
 					Console.WriteLine("Enter the ID(s) of the bible to remove (Multiple IDs are to be separted by space");
 					files = 0;
-					foreach (string Id in Console.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries))
+					foreach (string Id in RL().Split(' ', StringSplitOptions.RemoveEmptyEntries))
 					{
 						if (int.TryParse(Id, out int x) && x >= 1 && x <= AvailableBibles.Count)
 						{
@@ -247,7 +247,7 @@ namespace AionianApp.Terminal
 					break;
 				case '3':
 					Console.WriteLine("This will delete all the content of this tool. Are you sure (y/n)?");
-					char confirm = Console.ReadLine()[0];
+					char confirm = RL()[0];
 					if (confirm == 'Y' || confirm == 'y')
 					{
 						DeleteAllAssets();
@@ -262,14 +262,14 @@ namespace AionianApp.Terminal
 			void DisplayAvailableBibles()
 			{
 				int choice = 1;
-				ConsoleTable table = new ConsoleTable("ID", "Title", "Language", "Version", "Location");
+				ConsoleTable table = new("ID", "Title", "Language", "Version", "Location");
 				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard", AssetFilePath(AssetFileName(link)));
 				table.Write();
 			}
 			BibleLink[] DisplayDownloadable()
 			{
 				(BibleLink Link, ulong SizeInBytes)[] results = BibleLink.GetAllUrlsFromWebsite();
-				ConsoleTable table = new ConsoleTable("ID", "Title", "Language", "Size", "|", "ID", "Title", "Language", "Size");
+				ConsoleTable table = new("ID", "Title", "Language", "Size", "|", "ID", "Title", "Language", "Size");
 				for (int i = 0; i < results.Length; i += 2)
 				{
 					BibleLink link = results[i].Link;
@@ -279,7 +279,7 @@ namespace AionianApp.Terminal
 				}
 				table.Options.EnableCount = false;
 				table.Write();
-				List<BibleLink> links = new List<BibleLink>();
+				List<BibleLink> links = new();
 				foreach ((BibleLink Link, ulong SizeInBytes) in results) links.Add(Link);
 				return links.ToArray();
 			}
@@ -288,14 +288,14 @@ namespace AionianApp.Terminal
 		private void WordSearcher()
 		{
 			Console.WriteLine("1. Search for Any of the words\n2. Search for All of the words\n3. Regex (Regular Expression)\n Press any other key to return\nEnter your choice: ");
-			char input = Console.ReadLine()[0];
+			char input = RL()[0];
 			if (input != '1' && input != '2' && input != '3')
 			{
 				Console.WriteLine("Returning to main menu");
 				return;
 			}
 			Console.WriteLine("Enter words(s) :");
-			string inputline = Console.ReadLine().Trim();
+			string inputline = RL().Trim();
 			if (inputline.Length == 0) Console.WriteLine("No input recieved");
 			else if (Regex.Match(inputline, "[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && (input == '1' || input == '2')) Console.WriteLine("Cannot use punctutations for word search. Please use Regex search for that");
 			else if (inputline.Count(x => x == ' ') >= 5 && input == '2') Console.WriteLine(@"Option 'Search for All of the words' is not available for more than 5 words.");
@@ -308,7 +308,7 @@ namespace AionianApp.Terminal
 					Bible MyBible = LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible]));
 					Console.WriteLine("Starting Search. Please wait...");
 					SearchMode mode = input == '1' ? SearchMode.MatchAnyWord : (input == '2' ? SearchMode.MatchAllWords : SearchMode.Regex);
-					SearchQuery search = new SearchQuery(inputline, mode);
+					SearchQuery search = new(inputline, mode);
 					foreach (BibleReference result in search.GetResults(MyBible))
 					{
 						PrintVerse(result.Book, result.Verse, result.Chapter, MyBible[result]);
@@ -319,7 +319,7 @@ namespace AionianApp.Terminal
 			void DisplayAvailableBibles()
 			{
 				int choice = 1;
-				ConsoleTable table = new ConsoleTable("ID", "Title", "Language", "Version");
+				ConsoleTable table = new("ID", "Title", "Language", "Version");
 				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 				table.Write();
 			}
