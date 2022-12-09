@@ -24,6 +24,7 @@ namespace AionianApp
 			_currentBookIndex = 0;
 			CurrentChapter = 1;
 			LoadedChapter = null;
+			CurrentBookRegionalName = null;
 			LoadChapter(CurrentAllBooks[0], 1);
 		}
 		/// <summary>The currently loaded chapter. </summary>
@@ -35,6 +36,8 @@ namespace AionianApp
 		private byte _currentBookIndex;
 		/// <summary>The chapter number of the loaded chapter. </summary>
 		public byte CurrentChapter { get; private set; }
+		/// <summary>The regional name of the loaded book. </summary>
+		public string? CurrentBookRegionalName { get; private set; }
 		/// <summary>
 		/// Sets the `LoadedChapter` object with the given values
 		/// </summary>
@@ -46,7 +49,9 @@ namespace AionianApp
 			if (!LoadedBible.Value.Books.ContainsKey(book)) throw new ArgumentException("This book does not exist in this Bible", nameof(book));
 			_currentBookIndex = (byte)Array.IndexOf(CurrentAllBooks, book);
 			CurrentChapter = chapter;
-			LoadedChapter = LoadedBible.Value.Books[CurrentBook].Chapter[CurrentChapter];
+			Book bookmem = LoadedBible.Value.Books[CurrentBook];
+			LoadedChapter = bookmem.Chapter[CurrentChapter];
+			CurrentBookRegionalName = bookmem.RegionalBookName;
 		}
 		/// <summary>Moves to the next chapter</summary>
 		public void NextChapter()
