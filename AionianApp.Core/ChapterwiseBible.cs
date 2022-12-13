@@ -73,7 +73,7 @@ namespace AionianApp
 			else
 			{
 				if (_currentBookIndex != 0) _currentBookIndex--;
-				else _currentBookIndex = (byte)(CurrentAllBooks.Length - 1); ;
+				else _currentBookIndex = (byte)(CurrentAllBooks.Length - 1);
 				CurrentChapter = (byte)LoadedBible.Value.Books[CurrentBook].Chapter.Count;
 			}
 		}

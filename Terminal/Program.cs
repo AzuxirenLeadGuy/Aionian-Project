@@ -180,7 +180,6 @@ namespace AionianApp.Terminal
 					{
 						Console.WriteLine("Enter the ID(s) of the bible to download (Multiple IDs are to be separted by space");
 						files = 0;
-						object lockobject = new();
 						foreach (string Id in RL().Split(' ', StringSplitOptions.RemoveEmptyEntries))
 						{
 							if (int.TryParse(Id, out int x) && x >= 1 && x <= list.Length)
@@ -209,11 +208,8 @@ namespace AionianApp.Terminal
 									}
 									void OnDownloadProgress(object? o, HttpProgressEventArgs e)
 									{
-										// lock (lockobject)
-										{
-											progressBar.Percentage = (byte)e.ProgressPercentage;
-											progressBar.Write();
-										}
+										progressBar.Percentage = (byte)e.ProgressPercentage;
+										progressBar.Write();
 										if (progressBar.Percentage == 100)
 											Console.WriteLine("\nFile Download Complete.");
 									}

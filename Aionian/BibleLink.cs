@@ -65,23 +65,30 @@ namespace Aionian
 			string ResourceSite = @"https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/";
 			List<(BibleLink Link, ulong SizeInBytes)> links = new();
 			string base_url = ResourceSite + "Content.txt";
-			HttpClient clinet = new();
-			using (StreamReader sr = new(clinet.GetStreamAsync(base_url).Result))
+			try
 			{
-				while (!sr.EndOfStream)
+				HttpClient clinet = new();
+				using (StreamReader sr = new(clinet.GetStreamAsync(base_url).Result))
 				{
-					string[]? responsestring = sr.ReadLine()?.Split('\t');
-					if (responsestring == null) throw new ArgumentException("Unable to parse data from online dataset");
-					string url = ResourceSite + responsestring[0];
-					ulong size = ulong.Parse(responsestring[1]);
-					bool aionianEdition = responsestring[0].EndsWith("Aionian-Edition.noia");
-					string[] tl = responsestring[0].Replace("---", "|").Split('|');
-					string language = tl[1];
-					string title = tl[2];
-					links.Add((new BibleLink(title, language, url, aionianEdition), size));
+					while (!sr.EndOfStream)
+					{
+						string[]? responsestring = sr.ReadLine()?.Split('\t');
+						if (responsestring == null) throw new ArgumentException("Unable to parse data from online dataset");
+						string url = ResourceSite + responsestring[0];
+						ulong size = ulong.Parse(responsestring[1]);
+						bool aionianEdition = responsestring[0].EndsWith("Aionian-Edition.noia");
+						string[] tl = responsestring[0].Replace("---", "|").Split('|');
+						string language = tl[1];
+						string title = tl[2];
+						links.Add((new BibleLink(title, language, url, aionianEdition), size));
+					}
 				}
+				return links.ToArray();
 			}
-			return links.ToArray();
+			catch
+			{
+				return Array.Empty<(BibleLink Link, ulong SizeInBytes)>();
+			}
 		}
 		/// <summary>
 		/// This is an unofficial way to download the stream which can be further used to convert into the Bible Class object.
@@ -103,9 +110,9 @@ namespace Aionian
 		/// <param name="handler">The event called when the download progress is changed</param>
 		/// <param name="cancellationToken">The event called when the download is completed</param>
 		/// <returns>Returns the FileStream of the .noia database of Bible</returns>
-		public async Task<StreamReader> DownloadStreamAsync(HttpMessageHandler handler, CancellationToken cancellationToken = default)
+		public async Task<StreamReader> DownloadStreamAsync(HttpMessageHandler? handler = null, CancellationToken cancellationToken = default)
 		{
-			using HttpClient client = new(handler);
+			using HttpClient client = handler != null ? new(handler) : new();
 			Stream st = await client.GetStreamAsync(URL, cancellationToken);
 			return new StreamReader(st);
 		}
