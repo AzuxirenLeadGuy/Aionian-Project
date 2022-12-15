@@ -3,6 +3,8 @@ using Aionian;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace AionianApp
 {
@@ -64,7 +66,7 @@ namespace AionianApp
 		/// <summary>
 		/// Deletes everything in the AppDataFolderPath
 		/// </summary>
-		protected virtual void DeleteAllAssets() => Directory.Delete(AppDataFolderPath, true);
+		public virtual void DeleteAllAssets() => Directory.Delete(AppDataFolderPath, true);
 		/// <summary>
 		/// Saves changes to the asset log file
 		/// </summary>
@@ -84,10 +86,41 @@ namespace AionianApp
 		/// <returns>(T) The file loaded from the asset file</returns>
 		protected T? LoadFileAsJson<T>(string filename) => JsonConvert.DeserializeObject<T>(File.ReadAllText(AssetFilePath(filename)));
 		/// <summary>
-		/// Contains a string of the names of the books. Use this as an option for "Select the book of bible"
+		/// Loads and returns the chapterwise bible struct from the assets stored in this device.
 		/// </summary>
-		/// <returns></returns>
-		public readonly string[] BookNames = Enum.GetNames(typeof(BibleBook));
+		/// <param name="link">The link/ID of the bible to load.</param>
+		/// <returns>The `ChapterwiseBible` struct for this link</returns>
+		public ChapterwiseBible LoadChapterwiseBible(BibleLink link)
+		{
+			Bible bible = LoadFileAsJson<Bible>(AssetFileName(link));
+			return new(bible);
+		}
+		/// <summary>
+		/// Downloads, stores a Bible from the given link, and updates
+		/// the internal list of Available Bibles
+		/// </summary>
+		/// <param name="link">The link to download</param>
+		/// <param name="handler">The HttpMessageHandler for updating the progress if any</param>
+		public virtual async Task DownloadBibleAsync(BibleLink link, HttpMessageHandler? handler=null)
+		{
+			StreamReader stream = await link.DownloadStreamAsync(handler);
+			Bible bible = Bible.ExtractBible(stream);
+			SaveFileAsJson(bible, AssetFileName(bible));
+			AvailableBibles.Add(link);
+			SaveAssetLog();
+		}
+		/// <summary>
+		/// Deletes a given bible and updates the internal list
+		/// of Available Bibles
+		/// </summary>
+		/// <param name="link">The ID of the bible to delete</param>
+		public virtual void Delete(BibleLink link)
+		{
+			if(AvailableBibles.Contains(link) == false) return;
+			File.Delete(AssetFilePath(AssetFileName(link)));
+			AvailableBibles.Remove(link);
+			SaveAssetLog();
+		}
 		/// <summary>
 		/// This is the text for the 'About Us' content.
 		/// </summary>

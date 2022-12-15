@@ -64,15 +64,14 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
-				ChapterwiseBible chapterwiseBible = new(LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible])));
+				ChapterwiseBible chapterwiseBible = LoadChapterwiseBible(AvailableBibles[--bible]);
 				List<string> allBookNames = new();
+				BibleBook[] books_list = chapterwiseBible.RegionalNames.Keys.ToArray();
 				int maxlength = 0, sno = 0;
-				var loaded_bible = chapterwiseBible.LoadedBible ?? throw new ArgumentException("Unable to process the loaded bible!");
-				var bookCopy = loaded_bible.Books;
-				foreach (BibleBook bk in chapterwiseBible.CurrentAllBooks)
+				foreach (var bkpair in books_list)
 				{
 					++sno;
-					string str = $"{sno}. {bookCopy[bk].RegionalBookName}";
+					string str = $"{sno}. {chapterwiseBible.RegionalNames[bkpair]}";
 					allBookNames.Add(str);
 					maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
 				}// Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
@@ -93,16 +92,16 @@ namespace AionianApp.Terminal
 					}
 				}
 				Console.WriteLine("Enter ID of the Book to read: ");
-				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= 66 && bookCopy.ContainsKey((BibleBook)bookid))
+				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= chapterwiseBible.BookCounts)
 				{
-					byte chapter;
-					BibleBook id = (BibleBook)bookid;
-					int len = bookCopy[id].Chapter.Count;
-					if (len == 1) chapter = 1;
+					byte currentChapter;
+					BibleBook currentBook = books_list[bookid - 1];
+					int len = chapterwiseBible.GetChapterCount(currentBook);
+					if (len == 1) currentChapter = 1;
 					else
 					{
 					akag: Console.Write($"This book contains {len} chapters. \nEnter Chapter number to read: ");
-						if (!byte.TryParse(Console.ReadLine(), out chapter) || chapter < 1 || chapter > len)
+						if (!byte.TryParse(Console.ReadLine(), out currentChapter) || currentChapter < 1 || currentChapter > len)
 						{
 							Console.ForegroundColor = ConsoleColor.Red;
 							Console.WriteLine("Invalid Chapter! Try again...");
@@ -110,9 +109,8 @@ namespace AionianApp.Terminal
 							goto akag;
 						}
 					}
-				sr: chapterwiseBible.LoadChapter(id, chapter);
-					Dictionary<byte, string> chap = chapterwiseBible.LoadedChapter ?? throw new ArgumentException("Chapter is null");
-					DisplayChapter(chap, Bible.ShortBookNames[(byte)chapterwiseBible.CurrentBook], chapterwiseBible.CurrentChapter);
+				sr: Dictionary<byte, string> chap = chapterwiseBible.LoadChapter(currentBook, currentChapter);
+					DisplayChapter(chap, Bible.ShortBookNames[(byte)currentBook], currentChapter);
 					PrintSep();
 					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select\n4. Back to main menu");
 					if (byte.TryParse(Console.ReadLine(), out byte rgoption))
@@ -124,14 +122,10 @@ namespace AionianApp.Terminal
 							case 4:
 								goto skip;
 							case 1:
-								chapterwiseBible.NextChapter();
-								chapter = chapterwiseBible.CurrentChapter;
-								id = chapterwiseBible.CurrentBook;
+								(currentBook, currentChapter) = chapterwiseBible.NextChapter(currentBook, currentChapter);
 								goto sr;
 							case 2:
-								chapterwiseBible.PreviousChapter();
-								chapter = chapterwiseBible.CurrentChapter;
-								id = chapterwiseBible.CurrentBook;
+								(currentBook, currentChapter) = chapterwiseBible.PreviousChapter(currentBook, currentChapter);
 								goto sr;
 							default: break;
 						}

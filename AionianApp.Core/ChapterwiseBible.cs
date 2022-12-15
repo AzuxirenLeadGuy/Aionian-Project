@@ -1,5 +1,6 @@
-using System;
 using Aionian;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,7 +12,7 @@ namespace AionianApp
 		/// <summary>
 		/// The bible to load verses from.
 		/// </summary>
-		public Bible? LoadedBible { get; private set; }
+		public Bible LoadedBible { get; }
 		/// <summary>
 		/// Loads the Bible from the asset
 		/// </summary>
@@ -20,62 +21,62 @@ namespace AionianApp
 		public ChapterwiseBible(Bible loadedBible)
 		{
 			LoadedBible = loadedBible;
-			CurrentAllBooks = LoadedBible.Value.Books.Keys.ToArray();
-			_currentBookIndex = 0;
-			CurrentChapter = 1;
-			LoadedChapter = null;
-			CurrentBookRegionalName = null;
-			LoadChapter(CurrentAllBooks[0], 1);
+			Dictionary<BibleBook, Book> books = LoadedBible.Books;
+			RegionalNames = new();
+			foreach (var book in books)
+				RegionalNames.Add(book.Key, book.Value.RegionalBookName);
+			BookCounts = (byte)RegionalNames.Count;
 		}
-		/// <summary>The currently loaded chapter. </summary>
-		public Dictionary<byte, string>? LoadedChapter { get; private set; }
-		/// <summary>An array of all books available in the Bible loaded by the <c>LoadBible</c> method</summary>
-		public BibleBook[] CurrentAllBooks { get; private set; }
-		/// <summary>The book of the loaded chapter. </summary>
-		public BibleBook CurrentBook => CurrentAllBooks[_currentBookIndex];
-		private byte _currentBookIndex;
-		/// <summary>The chapter number of the loaded chapter. </summary>
-		public byte CurrentChapter { get; private set; }
-		/// <summary>The regional name of the loaded book. </summary>
-		public string? CurrentBookRegionalName { get; private set; }
+		/// <summary>Dictionary of all books available in this bible, mapped to their regional names.</summary>
+		public Dictionary<BibleBook, string> RegionalNames { get; }
+		/// <summary>The number of books in the loaded bible</summary>
+		public readonly byte BookCounts;
 		/// <summary>
-		/// Sets the `LoadedChapter` object with the given values
+		/// Returns the number of chapters in a given book of the loaded bible
 		/// </summary>
+		/// <param name="book">The book to check for the count of chapters</param>
+		/// <returns>The number of chapters in the given book of the loaded bible</returns>
+		public byte GetChapterCount(BibleBook book)
+		{
+			if (RegionalNames.ContainsKey(book) == false) throw new ArgumentException("The given key does not exist in the loaded bible!");
+			return (byte)LoadedBible.Books[book].Chapter.Count;
+		}
+		/// <summary>Returns the next chapter for a given book and chapter in the loaded bible</summary>
+		/// <param name="currentBook">The book currently at</param>
+		/// <param name="currentChapter">The chapter currently at</param>
+		/// <returns>Tuple of book and chapter that succeeds this current chapter</returns>
+		public (BibleBook BookEnum, byte Chapter) NextChapter(BibleBook currentBook, byte currentChapter)
+		{
+			currentChapter++;
+			if (GetChapterCount(currentBook) < currentChapter)
+			{
+				currentChapter = 1;
+				BibleBook[] booklist = RegionalNames.Keys.ToArray();
+				int idx = Array.IndexOf(booklist, currentBook);
+				currentBook = booklist[(idx + 1)%booklist.Length];
+			}
+			return (currentBook, currentChapter);
+		}
+		/// <summary>Returns the next chapter for a given book and chapter in the loaded bible</summary>
+		/// <param name="currentBook">The book currently at</param>
+		/// <param name="currentChapter">The chapter currently at</param>
+		/// <returns>Tuple of book and chapter that succeeds this current chapter</returns>
+		public (BibleBook BookEnum, byte Chapter) PreviousChapter(BibleBook currentBook, byte currentChapter)
+		{
+			currentChapter--;
+			if (currentChapter == 0)
+			{
+				BibleBook[] booklist = RegionalNames.Keys.ToArray();
+				int idx = Array.IndexOf(booklist, currentBook);
+				currentBook = booklist[(booklist.Length + idx - 1)%booklist.Length];
+				currentChapter = GetChapterCount(currentBook);
+			}
+			return (currentBook, currentChapter);
+		}
+		/// <summary> Returns a collection of verse for the given chapter. </summary>
 		/// <param name="book">BibleBook to load</param>
 		/// <param name="chapter">Selected chapter</param>
-		public void LoadChapter(BibleBook book, byte chapter)
-		{
-			if (LoadedBible == null) throw new ArgumentException("Bible is not loaded!");
-			if (!LoadedBible.Value.Books.ContainsKey(book)) throw new ArgumentException("This book does not exist in this Bible", nameof(book));
-			_currentBookIndex = (byte)Array.IndexOf(CurrentAllBooks, book);
-			CurrentChapter = chapter;
-			Book bookmem = LoadedBible.Value.Books[CurrentBook];
-			LoadedChapter = bookmem.Chapter[CurrentChapter];
-			CurrentBookRegionalName = bookmem.RegionalBookName;
-		}
-		/// <summary>Moves to the next chapter</summary>
-		public void NextChapter()
-		{
-			if (LoadedBible == null) throw new Exception("The method 'LoadChapter()' must be called before. Currently the `LoadedBible` variable is null");
-			if (LoadedBible.Value.Books[CurrentBook].Chapter.Count > CurrentChapter) CurrentChapter++;
-			else
-			{
-				CurrentChapter = 1;
-				if (_currentBookIndex != CurrentAllBooks.Length - 1) _currentBookIndex++;
-				else _currentBookIndex = 0;
-			}
-		}
-		/// <summary>Moves to the next chapter</summary>
-		public void PreviousChapter()
-		{
-			if (LoadedBible == null) throw new Exception("The method 'LoadChapter()' must be called before. Currently the `LoadedBible` variable is null");
-			if (1 < CurrentChapter) CurrentChapter--;
-			else
-			{
-				if (_currentBookIndex != 0) _currentBookIndex--;
-				else _currentBookIndex = (byte)(CurrentAllBooks.Length - 1);
-				CurrentChapter = (byte)LoadedBible.Value.Books[CurrentBook].Chapter.Count;
-			}
-		}
+		/// <returns>A dictionary of verses</returns>
+		public Dictionary<byte, string> LoadChapter(BibleBook book, byte chapter) => LoadedBible.Books[book].Chapter[chapter];
 	}
 }
