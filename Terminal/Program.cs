@@ -45,7 +45,7 @@ namespace AionianApp.Terminal
 				PrintSep();
 				Console.WriteLine();
 				Console.WriteLine("\n1. Bible Chapter Reading\n2. Bible verse search \n3. Download Bible Modules \n4. Exit");
-				Console.WriteLine("Enter Your Choice: "); ;
+				Console.WriteLine("Enter Your Choice: ");
 				switch (RL()[0])
 				{
 					case '1': ChapterDisplay(); break;
@@ -78,7 +78,10 @@ namespace AionianApp.Terminal
 				int columns = Console.WindowWidth / maxlength;
 			bk:;
 				PrintSep();
-				if (columns < 2) foreach (string val in allBookNames) Console.WriteLine(val);
+				if (columns < 2)
+				{
+					foreach (string val in allBookNames) Console.WriteLine(val);
+				}
 				else
 				{
 					int j = 0;
@@ -97,7 +100,10 @@ namespace AionianApp.Terminal
 					byte currentChapter;
 					BibleBook currentBook = books_list[bookid - 1];
 					int len = chapterwiseBible.GetChapterCount(currentBook);
-					if (len == 1) currentChapter = 1;
+					if (len == 1)
+					{
+						currentChapter = 1;
+					}
 					else
 					{
 					akag: Console.Write($"This book contains {len} chapters. \nEnter Chapter number to read: ");
@@ -154,7 +160,10 @@ namespace AionianApp.Terminal
 		}
 		public void AssetManagement()
 		{
-			if (AvailableBibles.Count == 0) Console.WriteLine("This program requires at least one bible to be installed. Please Install at least once");
+			if (AvailableBibles.Count == 0)
+			{
+				Console.WriteLine("This program requires at least one bible to be installed. Please Install at least once");
+			}
 			else
 			{
 				Console.WriteLine("Displaying Installed bibles: ");
@@ -169,7 +178,10 @@ namespace AionianApp.Terminal
 					int files;
 					try { list = DisplayDownloadable(); }
 					catch (Exception e) { Console.WriteLine(e.Message); }
-					if (list == null || list.Length == 0) Console.WriteLine("Could not connect to the server... ");
+					if (list == null || list.Length == 0)
+					{
+						Console.WriteLine("Could not connect to the server... ");
+					}
 					else
 					{
 						Console.WriteLine("Enter the ID(s) of the bible to download (Multiple IDs are to be separted by space");
@@ -179,7 +191,10 @@ namespace AionianApp.Terminal
 							if (int.TryParse(Id, out int x) && x >= 1 && x <= list.Length)
 							{
 								BibleLink link = list[--x];
-								if (AvailableBibles.Contains(link)) Console.WriteLine($"File {AssetFileName(link)} already exists");
+								if (AvailableBibles.Contains(link))
+								{
+									Console.WriteLine($"File {AssetFileName(link)} already exists");
+								}
 								else
 								{
 									Console.WriteLine($"Downloading file: {AssetFileName(link)}");
@@ -209,7 +224,10 @@ namespace AionianApp.Terminal
 									}
 								}
 							}
-							else Console.WriteLine($"Ignoring Invalid input {Id}");
+							else
+							{
+								Console.WriteLine($"Ignoring Invalid input {Id}");
+							}
 						}
 						Console.WriteLine($"Downloaded {files} file(s) Successfully");
 					}
@@ -231,7 +249,10 @@ namespace AionianApp.Terminal
 							}
 							catch (Exception e) { Console.WriteLine(e.Message); }
 						}
-						else Console.WriteLine($"Ignoring Invalid input {Id}");
+						else
+						{
+							Console.WriteLine($"Ignoring Invalid input {Id}");
+						}
 					}
 					Console.WriteLine($"Removed {files} file(s) Successfully");
 					break;
@@ -244,7 +265,11 @@ namespace AionianApp.Terminal
 						Console.WriteLine("All assets removed");
 						ExitPressed = true;
 					}
-					else Console.WriteLine("Delete process skipped.");
+					else
+					{
+						Console.WriteLine("Delete process skipped.");
+					}
+
 					break;
 				default: Console.WriteLine("Returning to main menu"); break;
 			}
@@ -273,7 +298,6 @@ namespace AionianApp.Terminal
 				foreach ((BibleLink Link, ulong SizeInBytes) in results) links.Add(Link);
 				return links.ToArray();
 			}
-
 		}
 		private void WordSearcher()
 		{
@@ -286,9 +310,18 @@ namespace AionianApp.Terminal
 			}
 			Console.WriteLine("Enter words(s) :");
 			string inputline = RL().Trim();
-			if (inputline.Length == 0) Console.WriteLine("No input recieved");
-			else if (Regex.Match(inputline, "[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && (input == '1' || input == '2')) Console.WriteLine("Cannot use punctutations for word search. Please use Regex search for that");
-			else if (inputline.Count(x => x == ' ') >= 5 && input == '2') Console.WriteLine(@"Option 'Search for All of the words' is not available for more than 5 words.");
+			if (inputline.Length == 0)
+			{
+				Console.WriteLine("No input recieved");
+			}
+			else if (Regex.Match(inputline, "[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && (input == '1' || input == '2'))
+			{
+				Console.WriteLine("Cannot use punctutations for word search. Please use Regex search for that");
+			}
+			else if (inputline.Count(x => x == ' ') >= 5 && input == '2')
+			{
+				Console.WriteLine("Option 'Search for All of the words' is not available for more than 5 words.");
+			}
 			else
 			{
 				DisplayAvailableBibles();
@@ -304,7 +337,10 @@ namespace AionianApp.Terminal
 						PrintVerse(result.Book, result.Verse, result.Chapter, MyBible[result]);
 					}
 				}
-				else Console.WriteLine("Invalid input. Aborting process..");
+				else
+				{
+					Console.WriteLine("Invalid input. Aborting process..");
+				}
 			}
 			void DisplayAvailableBibles()
 			{

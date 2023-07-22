@@ -1,41 +1,40 @@
 using Aionian;
-using System.IO;
-using System.Linq;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Text.Json;
-using Xunit;
-namespace TestingAionianLibrary
+
+namespace Testing_AionianLibrary;
+
+[TestClass]
+public class UnitTest1
 {
-	public class UnitTesting
+	internal BibleLink Link = new("Aionian-Bible", "English", "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/Holy-Bible---English---Aionian-Bible---Standard-Edition.noia", false);
+	internal const int LinkCount = 214;
+	[TestMethod]
+	public void BibleLinkFetching()
 	{
-		internal BibleLink Link = new("Aionian-Bible", "English", "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/Holy-Bible---English---Aionian-Bible---Standard-Edition.noia", false);
-		internal const int LinkCount = 214;
-		[Fact]
-		public void BibleLinkFetching()
-		{
-			(BibleLink Link, ulong SizeInBytes)[] x = BibleLink.GetAllUrlsFromWebsite();
-			Assert.True(x.Length >= LinkCount);
-		}
-		[Fact]
-		public void BibleLinkDownloading()
-		{
-			Bible englishBible = Bible.ExtractBible(Link.DownloadStream());
-			Assert.Equal("In the beginning God created the heavens and the earth.", englishBible[BibleBook.Genesis, 1, 1]);
-		}
-		[Fact]
-		public void CrossReferenceTest()
-		{
-			CrossReferenceDatabase x = new();
-			x.ReadFromFile(40);
-			JsonSerializerOptions options = new() { IncludeFields = true };
-			File.WriteAllText("CR.json", JsonSerializer.Serialize(x.AllCrossReferences, options));
-		}
-		[Fact]
-		public void RegionalBookNameTest()
-		{
-			(BibleLink Link, ulong SizeInBytes)[] allLinks = BibleLink.GetAllUrlsFromWebsite();
-			BibleLink link = allLinks.Where((x) => x.Link.Language == "Albanian-Tosk").First().Link;
-			Bible bible = Bible.ExtractBible(link.DownloadStream());
-			Assert.Equal("1 i Samuelit", bible.Books[BibleBook.I_Samuel].RegionalBookName);
-		}
+		(BibleLink Link, ulong SizeInBytes)[] x = BibleLink.GetAllUrlsFromWebsite();
+		Assert.IsTrue(x.Length >= LinkCount);
+	}
+	[TestMethod]
+	public void BibleLinkDownloading()
+	{
+		Bible englishBible = Bible.ExtractBible(Link.DownloadStream());
+		Assert.AreEqual("In the beginning, God created the heavens and the earth.", englishBible[BibleBook.Genesis, 1, 1]);
+	}
+	[TestMethod]
+	public void CrossReferenceTest()
+	{
+		CrossReferenceDatabase x = new();
+		x.ReadFromFile(40);
+		JsonSerializerOptions options = new() { IncludeFields = true };
+		File.WriteAllText("CR.json", JsonSerializer.Serialize(x.AllCrossReferences, options));
+	}
+	[TestMethod]
+	public void RegionalBookNameTest()
+	{
+		(BibleLink Link, ulong SizeInBytes)[] allLinks = BibleLink.GetAllUrlsFromWebsite();
+		BibleLink link = allLinks.First((x) => x.Link.Language == "Albanian-Tosk").Link;
+		Bible bible = Bible.ExtractBible(link.DownloadStream());
+		Assert.AreEqual("1 i Samuelit", bible.Books[BibleBook.I_Samuel].RegionalBookName);
 	}
 }

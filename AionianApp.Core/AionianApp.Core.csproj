@@ -12,6 +12,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
+		<Nullable>enable</Nullable>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
 		<Description>Package with basic boilerplate code to build Aionian Apps</Description>
 		<PackageLicenseExpression>CC-BY-4.0</PackageLicenseExpression>

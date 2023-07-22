@@ -1,8 +1,10 @@
 using System;
 namespace Progress_bar
 {
+	[Flags]
 	public enum ProgressFormat : byte
 	{
+		None,
 		BarOnly = 1,
 		PercOnly = 2,
 		RevolverOnly = 4
@@ -16,7 +18,7 @@ namespace Progress_bar
 		private bool _lastRevolveState;
 		public byte Percentage
 		{
-			get => _perc;
+			readonly get => _perc;
 			set
 			{
 				_perc = value;
@@ -39,7 +41,6 @@ namespace Progress_bar
 			int x = _written;
 			while (--x >= 0) Console.Write('\b');
 			_written = 0;
-
 		}
 		private void UpdateBar()
 		{
@@ -68,7 +69,7 @@ namespace Progress_bar
 		public void Write(ProgressFormat format = ProgressFormat.BarOnly | ProgressFormat.PercOnly | ProgressFormat.RevolverOnly)
 		{
 			if (_written != 0) Erase();
-			if (_fixedLength == false) _length = (byte)((Console.WindowWidth > 255 ? 255 : Console.WindowWidth) * 4 / 5);
+			if (!_fixedLength) _length = (byte)((Console.WindowWidth > 255 ? 255 : Console.WindowWidth) * 4 / 5);
 			if ((format & ProgressFormat.BarOnly) != 0) UpdateBar();
 			if ((format & ProgressFormat.PercOnly) != 0) UpdatePerc();
 			if ((format & ProgressFormat.RevolverOnly) != 0) UpdateRevolver();

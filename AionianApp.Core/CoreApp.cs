@@ -33,7 +33,7 @@ namespace AionianApp
 		/// <returns>(string) Path of the folder</returns>
 		public virtual string AppDataFolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Aionian-Terminal");
 		/// <summary>
-		/// This is the file path of the particular asset stored in the the folder given by AppDataFolderPath
+		/// This is the file path of the particular asset stored in the folder given by AppDataFolderPath
 		/// </summary>
 		/// <param name="file">Name of the file</param>
 		/// <returns>(string) Path of the asset file</returns>
@@ -116,7 +116,7 @@ namespace AionianApp
 		/// <param name="link">The ID of the bible to delete</param>
 		public virtual void Delete(BibleLink link)
 		{
-			if(AvailableBibles.Contains(link) == false) return;
+			if(!AvailableBibles.Contains(link)) return;
 			File.Delete(AssetFilePath(AssetFileName(link)));
 			AvailableBibles.Remove(link);
 			SaveAssetLog();
@@ -124,6 +124,6 @@ namespace AionianApp
 		/// <summary>
 		/// This is the text for the 'About Us' content.
 		/// </summary>
-		public const string AboutUsText = @"Aionian Bible app brought to you by Azuxiren. This app is made under CC-by-4.0 licence and comes with absolutly no guarantee";
+		public const string AboutUsText = "Aionian Bible app brought to you by Azuxiren. This app is made under CC-by-4.0 licence and comes with absolutly no guarantee";
 	}
 }
