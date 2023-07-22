@@ -4,7 +4,7 @@ namespace Aionian
 {
 	/// <summary> The Language of the bible </summary>
 	[Serializable]
-	public struct Book
+	public readonly struct Book
 	{
 		/// <summary> The Index of the book (Starts from 1) </summary>
 		public readonly byte BookIndex;

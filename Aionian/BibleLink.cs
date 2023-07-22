@@ -10,7 +10,7 @@ namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
 	[Serializable]
-	public struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
+	public readonly struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
 	{
 		/// <summary>The Title of the bible</summary>
 		public readonly string Title;
@@ -60,11 +60,10 @@ namespace Aionian
 		/// Returns a touple of all links available for download. Needless to say, this function requres internet
 		/// </summary>
 		/// <returns>Returs an array of every link avaialble to download in the Aionian</returns>
-		public static (BibleLink Link, ulong SizeInBytes)[] GetAllUrlsFromWebsite()
+		public static (BibleLink Link, ulong SizeInBytes)[] GetAllUrlsFromWebsite(string resourceSite="https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/")
 		{
-			string ResourceSite = @"https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/";
 			List<(BibleLink Link, ulong SizeInBytes)> links = new();
-			string base_url = ResourceSite + "Content.txt";
+			string base_url = resourceSite + "Content.txt";
 			try
 			{
 				HttpClient clinet = new();
@@ -72,9 +71,8 @@ namespace Aionian
 				{
 					while (!sr.EndOfStream)
 					{
-						string[]? responsestring = sr.ReadLine()?.Split('\t');
-						if (responsestring == null) throw new ArgumentException("Unable to parse data from online dataset");
-						string url = ResourceSite + responsestring[0];
+						string[]? responsestring = (sr.ReadLine()?.Split('\t')) ?? throw new ArgumentException("Unable to parse data from online dataset");
+						string url = resourceSite + responsestring[0];
 						ulong size = ulong.Parse(responsestring[1]);
 						bool aionianEdition = responsestring[0].EndsWith("Aionian-Edition.noia");
 						string[] tl = responsestring[0].Replace("---", "|").Split('|');

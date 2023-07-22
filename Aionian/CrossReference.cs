@@ -21,7 +21,7 @@ namespace Aionian
 		/// </summary>
 		/// <param name="other">The other reference to compare</param>
 		/// <returns>int value indicating the order</returns>
-		public int CompareTo(BibleReference other)
+		public readonly int CompareTo(BibleReference other)
 		{
 			if (Book != other.Book) return ((byte)Book).CompareTo((byte)other.Book);
 			else if (Chapter != other.Chapter) return Chapter.CompareTo(other.Chapter);
@@ -32,25 +32,25 @@ namespace Aionian
 		/// </summary>
 		/// <param name="other">The other reference to compare</param>
 		/// <returns>Boolean result indicating if both are equal</returns>
-		public bool Equals(BibleReference other) => Book == other.Book && Chapter == other.Chapter && Verse == other.Verse;
+		public readonly bool Equals(BibleReference other) => Book == other.Book && Chapter == other.Chapter && Verse == other.Verse;
 		/// <summary>
 		/// Denotes if the queried other reference is equivalent to this one
 		/// </summary>
 		/// <param name="obj">The other reference to compare</param>
 		/// <returns>Boolean result indicating if both are equal</returns>
-		public override bool Equals(object? obj) => obj is BibleReference reference && Equals(reference);
+		public override readonly bool Equals(object? obj) => obj is BibleReference reference && Equals(reference);
 		/// <summary>Compares a BibleRegion to this BibleReference. It is true only if the region consists of only a single verse, which is the other BibleReference</summary>
 		/// <param name="other">The BibleRegion to compare</param>
 		/// <returns>boolean value indicating that both are equivalent</returns>
-		public bool Equals(BibleRegion other) => other.Equals(this);
+		public readonly bool Equals(BibleRegion other) => other.Equals(this);
 		/// <summary>Returns HashCode of the object</summary>
 		/// <returns>The byte value of Book</returns>
-		public override int GetHashCode() => (byte)Book;
+		public override readonly int GetHashCode() => (byte)Book;
 		/// <summary>
 		/// Returns the string representation of the reference
 		/// </summary>
 		/// <returns></returns>
-		public override string ToString() => $"{Enum.GetName(typeof(BibleBook), Book)} {Chapter} : {Verse}";
+		public override readonly string ToString() => $"{Enum.GetName(typeof(BibleBook), Book)} {Chapter} : {Verse}";
 		/// <summary>
 		/// Denotes if the two refereces are equal to each other or not
 		/// </summary>
@@ -67,7 +67,7 @@ namespace Aionian
 		public static bool operator !=(BibleReference a, BibleReference b) => !a.Equals(b);
 	}
 	/// <summary>Denotes a continues region/range of verses</summary>
-	public struct BibleRegion : IEquatable<BibleRegion>, IEquatable<BibleReference>
+	public readonly struct BibleRegion : IEquatable<BibleRegion>, IEquatable<BibleReference>
 	{
 		/// <summary>The reference of region start</summary>
 		public readonly BibleReference RegionStart;
@@ -140,7 +140,7 @@ namespace Aionian
 	/// <summary>
 	/// Denotes a single cross-reference link
 	/// </summary>
-	public struct CrossReference : IComparable<CrossReference>, IEquatable<CrossReference>
+	public readonly struct CrossReference : IComparable<CrossReference>, IEquatable<CrossReference>
 	{
 		/// <summary>The reference to view cross-references of</summary>
 		public readonly BibleReference Source;
@@ -215,44 +215,39 @@ namespace Aionian
 		/// <param name="treshold">The minimum number of votes to be considered added in list</param>
 		public void ReadFromFile(int treshold)
 		{
-			Stream? s = Assembly.GetExecutingAssembly().GetManifestResourceStream("Aionian.cross_references.cross_references.txt");
-			if (s == null)
-				throw new Exception("Cross-references are not loaded as embedded resource!");
-			using (StreamReader stream = new(s))
+			Stream? s = Assembly.GetExecutingAssembly().GetManifestResourceStream("Aionian.cross_references.cross_references.txt") ?? throw new Exception("Cross-references are not loaded as embedded resource!");
+			using StreamReader stream = new(s);
+			_ = stream.ReadLine();//Ignore the first header line
+			List<BibleRegion> AllVerses = new();
+			BibleReference prevSource = new() { Book = BibleBook.NULL, Chapter = 0, Verse = 0 };
+			while (!stream.EndOfStream)
 			{
-				_ = stream.ReadLine();//Ignore the first header line
-				List<BibleRegion> AllVerses = new();
-				BibleReference prevSource = new() { Book = BibleBook.NULL, Chapter = 0, Verse = 0 };
-				while (!stream.EndOfStream)
+				string[]? row = (stream.ReadLine()?.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) ?? throw new Exception("Stream format is incorrect!");
+				if (int.Parse(row[2]) >= treshold)
 				{
-					string[]? row = stream.ReadLine()?.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-					if (row == null) throw new Exception("Stream format is incorrect!");
-					if (int.Parse(row[2]) >= treshold)
+					BibleReference currentSource = ParseReference(row[0]);
+					if (currentSource != prevSource)
 					{
-						BibleReference currentSource = ParseReference(row[0]);
-						if (currentSource != prevSource)
+						if (AllVerses.Count > 0)
 						{
-							if (AllVerses.Count > 0)
-							{
-								_ = AllCrossReferences.Add(new CrossReference(prevSource, AllVerses.ToArray()));
-								AllVerses.Clear();
-							}
-							prevSource = currentSource;
+							_ = AllCrossReferences.Add(new CrossReference(prevSource, AllVerses.ToArray()));
+							AllVerses.Clear();
 						}
-						if (row[1].Contains('-'))
-						{
-							string[] region = row[1].Split('-');
-							AllVerses.Add(new BibleRegion(ParseReference(region[0]), ParseReference(region[1])));
-						}
-						else
-						{
-							BibleReference referece = ParseReference(row[1]);
-							AllVerses.Add(new BibleRegion(referece, referece));
-						}
+						prevSource = currentSource;
+					}
+					if (row[1].Contains('-'))
+					{
+						string[] region = row[1].Split('-');
+						AllVerses.Add(new BibleRegion(ParseReference(region[0]), ParseReference(region[1])));
+					}
+					else
+					{
+						BibleReference referece = ParseReference(row[1]);
+						AllVerses.Add(new BibleRegion(referece, referece));
 					}
 				}
-				_ = AllCrossReferences.Add(new CrossReference(prevSource, AllVerses.ToArray()));
 			}
+			_ = AllCrossReferences.Add(new CrossReference(prevSource, AllVerses.ToArray()));
 			BibleReference ParseReference(string s)
 			{
 				string[] parts = s.Split('.');

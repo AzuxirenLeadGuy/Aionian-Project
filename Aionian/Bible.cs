@@ -5,7 +5,7 @@ namespace Aionian
 {
 	/// <summary> This denotes a Bible of a specific Language and Version/Title</summary>
 	[Serializable]
-	public struct Bible
+	public readonly struct Bible
 	{
 		/// <summary> The Language of the bible </summary>
 		public readonly string Language;
@@ -38,10 +38,11 @@ namespace Aionian
 		/// </summary>
 		public string this[BibleReference v] => this[v.Book, v.Chapter, v.Verse];
 		/// <summary>
+		/// <para>
 		/// Since the *.noia database identifies every book (irrespective of the bible language) with these short names, this array is used for that purpose while Extracting it.
 		/// Contains a list of Short Names of Books. The first index is NULL so as to match the enum BibleBook index and make its value interconvertible to this array's index
-		///
-		/// This way, we can get short name of a book as
+		/// </para>
+		/// <para>This way, we can get short name of a book as</para>
 		/// <code>
 		///
 		/// string shortname = ShortBookNames[(byte)BibleBook.Leviticus]

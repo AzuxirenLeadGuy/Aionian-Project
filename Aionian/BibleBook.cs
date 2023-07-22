@@ -1,16 +1,16 @@
 namespace Aionian
 {
-
 	/// <summary>
-	/// This is a value denoting all the books in the Bible. 
-	/// 
-	/// Start with NULL=0, so the value of each book is also it's index in Bible. 
+	/// <para>This is a value denoting all the books in the Bible. </para>
+	/// <para>
+	/// Start with NULL=0, so the value of each book is also it's index in Bible.
 	/// For example Genesis=1 and it is the 1st book, Exodus=2,...and so on.
-	/// 
-	/// 
-	/// C# has the Enum class which can return the string of each value, 
+	/// </para>
+	/// <para>
+	/// C# has the Enum class which can return the string of each value,
 	/// as well returning the complete string array of all enum identifiers.
-	/// Thus this enum can fulfill many requirements 
+	/// Thus this enum can fulfill many requirements
+	/// </para>
 	/// </summary>
 	public enum BibleBook : byte
 	{
