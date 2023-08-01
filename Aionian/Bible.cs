@@ -5,34 +5,18 @@ namespace Aionian
 {
 	/// <summary> This denotes a Bible of a specific Language and Version/Title</summary>
 	[Serializable]
-	public readonly struct Bible
+	public abstract class Bible
 	{
-		/// <summary> The Language of the bible </summary>
-		public readonly string Language;
-		/// <summary> The Specific bible </summary>
-		public readonly string Title;
-		/// <summary> Indicates whether this Bible is Aionian or Standard edition </summary>
-		public readonly bool AionianEdition;
-		/// <summary> The Collection of books </summary>
-		public readonly Dictionary<BibleBook, Book> Books;
-		/// <summary>
-		/// Default constructor for the Bible type
-		/// </summary>
-		/// <param name="title">Title</param>
-		/// <param name="language">Language</param>
-		/// <param name="aionianEdition">Aionian-Edition bool</param>
-		/// <param name="books">Dictionary of Bible content</param>
-		public Bible(string title, string language, bool aionianEdition, Dictionary<BibleBook, Book> books)
-		{
-			Language = language;
-			Title = title;
-			AionianEdition = aionianEdition;
-			Books = books;
-		}
+		/// <summary> Describes the bible </summary>
+		public readonly BibleDescriptor Descriptor;
+		/// <summary> Initializes the bible </summary>
+		protected Bible(BibleDescriptor desc) => Descriptor = desc;
+		/// <summary> Gets the books of this bible </summary>
+		public abstract Book FetchBook(BibleBook book);
 		/// <summary>
 		/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 		/// </summary>
-		public string this[BibleBook b, byte c, byte v] => Books[b].Chapter[c][v];
+		public string this[BibleBook b, byte c, byte v] => FetchBook(b).Chapter[c][v];
 		/// <summary>
 		/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 		/// </summary>
@@ -65,7 +49,7 @@ namespace Aionian
 		/// </summary>
 		/// <param name="stream">The Stream to the *.noia Database</param>
 		/// <returns>The initiated Bible from the stream is returned</returns>
-		public static Bible ExtractBible(StreamReader stream)
+		public static (BibleDescriptor descriptor, Dictionary<BibleBook, Book> books) ExtractBible(StreamReader stream)
 		{
 			string? line;
 			byte CurrentChapter = 255;
@@ -119,7 +103,17 @@ namespace Aionian
 			}
 			CurrentBookData[CurrentChapter] = CurrentChapterData;
 			books[CurrentBook] = new Book((byte)CurrentBook, CurrentBookData, RegionalName[CurrentBook]);
-			return new Bible(title, language, aionianEdition, books);
+			return
+			(
+				new BibleDescriptor()
+				{
+					Title = title,
+					Language = language,
+					AionianEdition = aionianEdition,
+					RegionalName = RegionalName,
+				},
+				books
+			);
 		}
 	}
 }

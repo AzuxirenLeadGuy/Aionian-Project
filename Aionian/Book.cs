@@ -4,14 +4,14 @@ namespace Aionian
 {
 	/// <summary> The Language of the bible </summary>
 	[Serializable]
-	public readonly struct Book
+	public readonly record struct Book
 	{
 		/// <summary> The Index of the book (Starts from 1) </summary>
-		public readonly byte BookIndex;
+		public readonly byte BookIndex { get; init; }
 		/// <summary> The collection of chapters in this book </summary>
-		public readonly Dictionary<byte, Dictionary<byte, string>> Chapter;
+		public readonly Dictionary<byte, Dictionary<byte, string>> Chapter { get; init; }
 		/// <summary>The name of the book in the language of the region</summary>
-		public readonly string RegionalBookName;
+		public readonly string RegionalBookName { get; init; }
 		/// <summary> The Constructor for this type</summary>
 		public Book(byte bookindex, Dictionary<byte, Dictionary<byte, string>> chapter, string regionalBookName)
 		{

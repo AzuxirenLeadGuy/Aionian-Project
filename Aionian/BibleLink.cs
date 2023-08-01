@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System;
 using System.Threading.Tasks;
 using System.Net.Http;
@@ -10,16 +9,16 @@ namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
 	[Serializable]
-	public readonly struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
+	public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
 	{
 		/// <summary>The Title of the bible</summary>
-		public readonly string Title;
+		public readonly string Title { init; get; }
 		/// <summary>The Language of the bible</summary>
-		public readonly string Language;
+		public readonly string Language { init; get; }
 		/// <summary>The URL of the bible to download</summary>
-		public readonly string URL;
+		public readonly string URL { init; get; }
 		/// <summary>Indicates whether the bible edition is Aionian or not</summary>
-		public readonly bool AionianEdition;
+		public readonly bool AionianEdition { init; get; }
 		/// <summary>Constructor for the BibleLink type</summary>
 		public BibleLink(string title, string language, string url, bool aionianEdition)
 		{
@@ -41,12 +40,6 @@ namespace Aionian
 		/// <returns>returns true if equal, otherwise false</returns>
 		public bool Equals(BibleLink other) => URL == other.URL;
 		/// <summary>
-		/// Returns the equality of objects
-		/// </summary>
-		/// <param name="obj">The object to compare</param>
-		/// <returns>returns true if equal, otherwise false</returns>
-		public override bool Equals(object? obj) => obj != null && obj is BibleLink x && Equals(x);
-		/// <summary>
 		/// Returns Hash Code
 		/// </summary>
 		/// <returns>Returns Hash Code</returns>
@@ -60,7 +53,7 @@ namespace Aionian
 		/// Returns a touple of all links available for download. Needless to say, this function requres internet
 		/// </summary>
 		/// <returns>Returs an array of every link avaialble to download in the Aionian</returns>
-		public static (BibleLink Link, ulong SizeInBytes)[] GetAllUrlsFromWebsite(string resourceSite="https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/")
+		public static (BibleLink Link, ulong SizeInBytes)[] GetAllUrlsFromWebsite(string resourceSite = "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/")
 		{
 			List<(BibleLink Link, ulong SizeInBytes)> links = new();
 			string base_url = resourceSite + "Content.txt";
@@ -114,14 +107,6 @@ namespace Aionian
 			Stream st = await client.GetStreamAsync(URL, cancellationToken);
 			return new StreamReader(st);
 		}
-		/// <summary>Compares the two instances</summary>
-		/// <param name="left">BibleLink instance</param>
-		/// <param name="right">BibleLink instance</param>
-		public static bool operator ==(BibleLink left, BibleLink right) => left.Equals(right);
-		/// <summary>Compares the two instances</summary>
-		/// <param name="left">BibleLink instance</param>
-		/// <param name="right">BibleLink instance</param>
-		public static bool operator !=(BibleLink left, BibleLink right) => !(left == right);
 		/// <summary>Compares the two instances</summary>
 		/// <param name="left">BibleLink instance</param>
 		/// <param name="right">BibleLink instance</param>
