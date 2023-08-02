@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <PackageId>Azuxiren.Aionian</PackageId>
-    <Version>2.2</Version>
+    <Version>3.0</Version>
     <Authors>AzuxirenLeadGuy</Authors>
     <Company>Azuxiren</Company>
     <RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
@@ -18,9 +18,10 @@
     <Title>Aionian Library</Title>
     <Summary>Package for Aionian resources</Summary>
     <PackageReleaseNotes>
-
+- Set `SimpleBible` as a separate Bible implementation
+- Abstracted Books from Bible
+- Made Bible as an Abstract class
 - Separated the base `Aionian` project from `System.Text.Json` dependancy
-- Have all components of project as structs
 - Updated the resources site to a github fork, having more metadata
 - Add `RegionalBookName` to `Book`
 - Added experimental Cross-Reference support

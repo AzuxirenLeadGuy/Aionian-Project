@@ -4,7 +4,6 @@ using System.IO;
 namespace Aionian
 {
 	/// <summary> This denotes a Bible of a specific Language and Version/Title</summary>
-	[Serializable]
 	public abstract class Bible
 	{
 		/// <summary> Describes the bible </summary>

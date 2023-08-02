@@ -8,17 +8,16 @@ using System.Threading;
 namespace Aionian
 {
 	/// <summary>Represents a single link of an Aionian Bible</summary>
-	[Serializable]
 	public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
 	{
 		/// <summary>The Title of the bible</summary>
-		public readonly string Title { init; get; }
+		public readonly string Title;
 		/// <summary>The Language of the bible</summary>
-		public readonly string Language { init; get; }
+		public readonly string Language;
 		/// <summary>The URL of the bible to download</summary>
-		public readonly string URL { init; get; }
+		public readonly string URL;
 		/// <summary>Indicates whether the bible edition is Aionian or not</summary>
-		public readonly bool AionianEdition { init; get; }
+		public readonly bool AionianEdition;
 		/// <summary>Constructor for the BibleLink type</summary>
 		public BibleLink(string title, string language, string url, bool aionianEdition)
 		{
