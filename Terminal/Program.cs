@@ -66,12 +66,12 @@ namespace AionianApp.Terminal
 			{
 				ChapterwiseBible chapterwiseBible = LoadChapterwiseBible(AvailableBibles[--bible]);
 				List<string> allBookNames = new();
-				BibleBook[] books_list = chapterwiseBible.RegionalNames.Keys.ToArray();
+				BibleBook[] books_list = chapterwiseBible.Descriptor.RegionalName.Keys.ToArray();
 				int maxlength = 0, sno = 0;
 				foreach (var bkpair in books_list)
 				{
 					++sno;
-					string str = $"{sno}. {chapterwiseBible.RegionalNames[bkpair]}";
+					string str = $"{sno}. {chapterwiseBible.Descriptor.RegionalName[bkpair]}";
 					allBookNames.Add(str);
 					maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
 				}// Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
@@ -146,7 +146,7 @@ namespace AionianApp.Terminal
 			{
 				int choice = 1;
 				ConsoleTable table = new("ID", "Title", "Language", "Version");
-				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
+				foreach (BibleDescriptor link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 				table.Write();
 			}
 			void DisplayChapter(Dictionary<byte, string> chapter, string shortbookname, byte chapterno)
@@ -191,23 +191,22 @@ namespace AionianApp.Terminal
 							if (int.TryParse(Id, out int x) && x >= 1 && x <= list.Length)
 							{
 								BibleLink link = list[--x];
-								if (AvailableBibles.Contains(link))
+								if (CheckExists(link))
 								{
-									Console.WriteLine($"File {AssetFileName(link)} already exists");
+									Console.WriteLine($"File {AssetDirName(link)} already exists");
 								}
 								else
 								{
-									Console.WriteLine($"Downloading file: {AssetFileName(link)}");
+									Console.WriteLine($"Downloading file: {AssetDirName(link)}");
 									ConsoleProgressBar progressBar = new((byte)(Console.WindowWidth / 2));
 									ProgressMessageHandler handler = new(new HttpClientHandler() { AllowAutoRedirect = true });
 									try
 									{
 										handler.HttpReceiveProgress += OnDownloadProgress;
 										progressBar.Write();
-										Bible downloadedbible = Bible.ExtractBible(link.DownloadStreamAsync(handler).Result);
-										SaveFileAsJson(downloadedbible, AssetFileName(downloadedbible));
+										bool result = DownloadBibleAsync(link, handler).Result; //Bible.ExtractBible(link.DownloadStreamAsync(handler).Result);
+										if (!result) throw new Exception("Inner exception while downloading and storing");
 										files++;
-										AvailableBibles.Add(link);
 										Console.WriteLine("\nFile is saved successfully");
 									}
 									catch (Exception e)
@@ -239,12 +238,12 @@ namespace AionianApp.Terminal
 					{
 						if (int.TryParse(Id, out int x) && x >= 1 && x <= AvailableBibles.Count)
 						{
-							BibleLink link = AvailableBibles[--x];
+							BibleDescriptor link = AvailableBibles[--x];
 							try
 							{
-								File.Delete(AssetFilePath(AssetFileName(link)));
+								File.Delete(AssetPath(AssetDirName(link)));
 								files++;
-								Console.WriteLine($"Removed {AssetFileName(link)}");
+								Console.WriteLine($"Removed {AssetDirName(link)}");
 								_ = AvailableBibles.Remove(link);
 							}
 							catch (Exception e) { Console.WriteLine(e.Message); }
@@ -278,7 +277,8 @@ namespace AionianApp.Terminal
 			{
 				int choice = 1;
 				ConsoleTable table = new("ID", "Title", "Language", "Version", "Location");
-				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard", AssetFilePath(AssetFileName(link)));
+				foreach (BibleDescriptor link in AvailableBibles)
+					_ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard", AssetPath(AssetDirName(link)));
 				table.Write();
 			}
 			BibleLink[] DisplayDownloadable()
@@ -289,7 +289,7 @@ namespace AionianApp.Terminal
 				{
 					BibleLink link = results[i].Link;
 					BibleLink lin2 = results[i + 1].Link;
-					Debug.WriteLine($"link={AssetFileName(link)}; lin2={AssetFileName(lin2)};\n{link.Equals(lin2)} : {link.CompareTo(lin2)}\n\n");
+					Debug.WriteLine($"link={AssetDirName(link)}; lin2={AssetDirName(lin2)};\n{link.Equals(lin2)} : {link.CompareTo(lin2)}\n\n");
 					_ = table.AddRow(i + 1, link.Title, link.Language, $"{results[i].SizeInBytes / 1048576.0f:0.000} MB", "|", i + 2, lin2.Title, lin2.Language, $"{results[i + 1].SizeInBytes / 1048576.0f:0.000} MB");
 				}
 				table.Options.EnableCount = false;
@@ -328,13 +328,13 @@ namespace AionianApp.Terminal
 				Console.WriteLine("\nEnter the bible to load: ");
 				if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 				{
-					Bible MyBible = LoadFileAsJson<Bible>(AssetFileName(AvailableBibles[--bible]));
+					ChapterwiseBible Mybible = LoadChapterwiseBible(AvailableBibles[--bible]);
 					Console.WriteLine("Starting Search. Please wait...");
 					SearchMode mode = input == '1' ? SearchMode.MatchAnyWord : (input == '2' ? SearchMode.MatchAllWords : SearchMode.Regex);
 					SearchQuery search = new(inputline, mode);
-					foreach (BibleReference result in search.GetResults(MyBible))
+					foreach (BibleReference result in search.GetResults(Mybible))
 					{
-						PrintVerse(result.Book, result.Verse, result.Chapter, MyBible[result]);
+						PrintVerse(result.Book, result.Verse, result.Chapter, Mybible[result]);
 					}
 				}
 				else
@@ -346,7 +346,7 @@ namespace AionianApp.Terminal
 			{
 				int choice = 1;
 				ConsoleTable table = new("ID", "Title", "Language", "Version");
-				foreach (BibleLink link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
+				foreach (BibleDescriptor link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 				table.Write();
 			}
 			void PrintVerse(BibleBook bibleBook, byte chapterNo, byte verseNo, string verse)

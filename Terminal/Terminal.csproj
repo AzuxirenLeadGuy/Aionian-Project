@@ -19,7 +19,7 @@
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>2.1</Version>
+		<Version>3.0</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
