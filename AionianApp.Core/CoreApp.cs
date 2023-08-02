@@ -2,9 +2,10 @@ using System;
 using Aionian;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Text.Json;
+using System.Linq;
 
 namespace AionianApp
 {
@@ -21,12 +22,12 @@ namespace AionianApp
 		{
 			if (!Directory.Exists(AppDataFolderPath)) _ = Directory.CreateDirectory(AppDataFolderPath);
 			if (!File.Exists(AssetMainFilePath)) SaveAssetLog();
-			else AvailableBibles = LoadFileAsJson<List<BibleLink>>(AssetMainFilePath) ?? throw new Exception("Unable to load assets!");
+			else AvailableBibles = LoadFileAsJson<List<BibleDescriptor>>(AssetMainFilePath) ?? throw new Exception("Unable to load assets!");
 		}
 		/// <summary>
 		/// This list stores the available bibles this app has downloaded in its system
 		/// </summary>
-		protected readonly List<BibleLink> AvailableBibles = new();
+		protected readonly List<BibleDescriptor> AvailableBibles = new();
 		/// <summary>
 		/// This is the folder path where the Application stores the downloaded files at
 		/// </summary>
@@ -35,34 +36,45 @@ namespace AionianApp
 		/// <summary>
 		/// This is the file path of the particular asset stored in the folder given by AppDataFolderPath
 		/// </summary>
-		/// <param name="file">Name of the file</param>
-		/// <returns>(string) Path of the asset file</returns>
-		protected virtual string AssetFilePath(string file) => Path.Combine(AppDataFolderPath, file);
+		/// <param name="name">Name of the file</param>
+		/// <returns>(string) Path of the asset file/folder</returns>
+		protected virtual string AssetPath(string name) => Path.Combine(AppDataFolderPath, name);
 		/// <summary>
 		/// This is the file name of the Asset Log file: the file in which the asset list metadata is stored at
 		/// </summary>
 		/// <returns>(string) Name of the Asset Log file</returns>
-		public virtual string AssetMainFilePath => AssetFilePath("Asset.dat");
+		public virtual string AssetMainFilePath => AssetPath("Asset.dat");
 		/// <summary>
 		/// Deduces what the filename of the asset (intended to be Bible or BibleLink) will be, given its properties
 		/// </summary>
 		/// <param name="title">Title of the bible</param>
 		/// <param name="lang">Language of the bible</param>
 		/// <param name="aionianEdition">Wheter the bible is aionian edition or not</param>
-		/// <returns>(string) File name of the asset</returns>
-		protected virtual string AssetFileName(string title, string lang, bool aionianEdition) => $"{title}-{lang}-{(aionianEdition ? "Aionian" : "Standard")}.dat";
+		/// <returns>(string) Directory path of the bible asset</returns>
+		protected virtual string AssetDirName(string title, string lang, bool aionianEdition) => $"{title}-{lang}-{(aionianEdition ? "Aionian" : "Standard")}";
 		/// <summary>
-		/// Gets the filename of the link. This will be the (default) download destination of the link
+		/// Gets the folder name of the files for this Bible. This will be the (default) download destination of the link
 		/// </summary>
 		/// <param name="link">BibleLink object to load/download</param>
-		/// <returns>(string) File path (of download) of the Bible asset file</returns>
-		public string AssetFileName(BibleLink link) => AssetFileName(link.Title, link.Language, link.AionianEdition);
+		/// <returns>(string) Directory path of the bible asset</returns>
+		public string AssetDirName(BibleLink link) => AssetDirName(link.Title, link.Language, link.AionianEdition);
 		/// <summary>
-		/// Gets the filename of the Bible.<!----> This will be the (default) file path to load/store the bible from
+		/// Gets the folder name of the files for this Bible.<!----> This will be the (default) file path to load/store the bible from
 		/// </summary>
-		/// <param name="bible">Bible object to load/store</param>
+		/// <param name="bible">BibleDescriptor object to load/store</param>
+		/// <returns>(string) Directory path of the bible asset</returns>
+		public string AssetDirName(BibleDescriptor bible) => AssetDirName(bible.Title, bible.Language, bible.AionianEdition);
+		/// <summary>
+		/// Gets the folder name of the files for this Bible.<!----> This will be the (default) file path to load/store the bible from
+		/// </summary>
+		/// <param name="bible">BibleDescriptor object to load/store</param>
+		/// <returns>(string) Directory path of the bible asset</returns>
+		public string AssetFileName(BibleDescriptor bible) => $"{AssetDirName(bible)}/Root.dat";
+		/// <summary>Gets the name of the file storing this particular book of the bible</summary>
+		/// <param name="book">The book of the bible</param>
+		/// <param name="desc">The bible descrption</param>
 		/// <returns>(string) File path of the bible asset</returns>
-		public string AssetFileName(Bible bible) => AssetFileName(bible.Title, bible.Language, bible.AionianEdition);
+		public string AssetFileName(BibleBook book, BibleDescriptor desc) => ChapterwiseBible.GetBookPath(AssetDirName(desc), book);
 		/// <summary>
 		/// Deletes everything in the AppDataFolderPath
 		/// </summary>
@@ -77,23 +89,24 @@ namespace AionianApp
 		/// <param name="item">Object to serialize and store</param>
 		/// <param name="filename">File path to store the object</param>
 		/// <typeparam name="T">The Type of file to store</typeparam>
-		protected void SaveFileAsJson<T>(T item, string filename) => File.WriteAllText(AssetFilePath(filename), JsonConvert.SerializeObject(item, Formatting.Indented));
+		protected void SaveFileAsJson<T>(T item, string filename) => File.WriteAllText(AssetPath(filename), JsonSerializer.Serialize<T>(item, new JsonSerializerOptions() { AllowTrailingCommas = true, WriteIndented = true, IncludeFields = true }));
 		/// <summary>
 		/// Loads a given file from the deserialized text file stored in the given location
 		/// </summary>
 		/// <param name="filename">File path of the file to deserialize and load object from</param>
 		/// <typeparam name="T">The type of file to load</typeparam>
 		/// <returns>(T) The file loaded from the asset file</returns>
-		protected T? LoadFileAsJson<T>(string filename) => JsonConvert.DeserializeObject<T>(File.ReadAllText(AssetFilePath(filename)));
+		protected T? LoadFileAsJson<T>(string filename) => JsonSerializer.Deserialize<T>(File.ReadAllText(AssetPath(filename)), new JsonSerializerOptions() { IncludeFields = true });
 		/// <summary>
 		/// Loads and returns the chapterwise bible struct from the assets stored in this device.
 		/// </summary>
 		/// <param name="link">The link/ID of the bible to load.</param>
 		/// <returns>The `ChapterwiseBible` struct for this link</returns>
-		public ChapterwiseBible LoadChapterwiseBible(BibleLink link)
+		public ChapterwiseBible LoadChapterwiseBible(BibleDescriptor link)
 		{
-			Bible bible = LoadFileAsJson<Bible>(AssetFileName(link));
-			return new(bible);
+			string path = AssetFileName(link);
+			BibleDescriptor bible = LoadFileAsJson<BibleDescriptor?>(path) ?? throw new ArgumentException($"Given link is invalid: {AssetDirName(link)}");
+			return new(bible, AssetPath(AssetDirName(link)));
 		}
 		/// <summary>
 		/// Downloads, stores a Bible from the given link, and updates
@@ -101,26 +114,41 @@ namespace AionianApp
 		/// </summary>
 		/// <param name="link">The link to download</param>
 		/// <param name="handler">The HttpMessageHandler for updating the progress if any</param>
-		public virtual async Task DownloadBibleAsync(BibleLink link, HttpMessageHandler? handler=null)
+		public virtual async Task<bool> DownloadBibleAsync(BibleLink link, HttpMessageHandler? handler = null)
 		{
-			StreamReader stream = await link.DownloadStreamAsync(handler);
-			Bible bible = Bible.ExtractBible(stream);
-			SaveFileAsJson(bible, AssetFileName(bible));
-			AvailableBibles.Add(link);
-			SaveAssetLog();
+			try
+			{
+				StreamReader stream = await link.DownloadStreamAsync(handler);
+				var (desc, books) = Bible.ExtractBible(stream);
+				string path = AssetPath(AssetDirName(desc));
+				Directory.CreateDirectory(path);
+				SaveFileAsJson<BibleDescriptor>(desc, AssetFileName(desc));
+				foreach (var kp in books)
+				{
+					SaveFileAsJson<Book>(kp.Value, AssetFileName(kp.Key, desc));
+				}
+				AvailableBibles.Add(desc);
+				SaveAssetLog();
+			}
+			catch { return false; }
+			return true;
 		}
 		/// <summary>
 		/// Deletes a given bible and updates the internal list
 		/// of Available Bibles
 		/// </summary>
-		/// <param name="link">The ID of the bible to delete</param>
-		public virtual void Delete(BibleLink link)
+		/// <param name="desc">The ID of the bible to delete</param>
+		public virtual void Delete(BibleDescriptor desc)
 		{
-			if(!AvailableBibles.Contains(link)) return;
-			File.Delete(AssetFilePath(AssetFileName(link)));
-			AvailableBibles.Remove(link);
+			if (!AvailableBibles.Contains(desc)) return;
+			Directory.Delete(AssetPath(AssetDirName(desc)), true);
+			AvailableBibles.Remove(desc);
 			SaveAssetLog();
 		}
+		/// <summary> Check if the given link is present in the app or not</summary>
+		/// <param name="link">The link to check</param>
+		/// <returns>(bool) true if link exists already, otherwise false</returns>
+		public virtual bool CheckExists(BibleLink link) => AvailableBibles.Any(z => z.Title == link.Title && z.Language == link.Language && z.AionianEdition == link.AionianEdition);
 		/// <summary>
 		/// This is the text for the 'About Us' content.
 		/// </summary>

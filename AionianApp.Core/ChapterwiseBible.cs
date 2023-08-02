@@ -1,36 +1,35 @@
 using Aionian;
-
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace AionianApp
 {
 	/// <summary>A bible wrapped with helper functions that load a single chapter of a bible at a time</summary>
-	public struct ChapterwiseBible
+	public class ChapterwiseBible : Bible
 	{
-		/// <summary>
-		/// The bible to load verses from.
-		/// </summary>
-		public Bible LoadedBible { get; }
+		/// <summary>The path of the books of Bible, given the root</summary>
+		public static string GetBookPath(string root, BibleBook book) => $"{root}/{(byte)book}.dat";
+		///<summary>The root folder where files for this bible is stored</summary>
+		public readonly string RootPath;
 		/// <summary>
 		/// Loads the Bible from the asset
 		/// </summary>
 		/// <param name="loadedBible">The bible queried to load.</param>
+		/// <param name="path">The path of bible books to load.</param>
 		/// <returns>The bible object deserialized from the asset file</returns>
-		public ChapterwiseBible(Bible loadedBible)
+		public ChapterwiseBible(BibleDescriptor loadedBible, string path) : base(loadedBible) => RootPath = path;
+
+		/// <summary>Fetches a book from this bible</summary>
+		public override Book FetchBook(BibleBook book)
 		{
-			LoadedBible = loadedBible;
-			Dictionary<BibleBook, Book> books = LoadedBible.Books;
-			RegionalNames = new();
-			foreach (var book in books)
-				RegionalNames.Add(book.Key, book.Value.RegionalBookName);
-			BookCounts = (byte)RegionalNames.Count;
+			string fullpath = GetBookPath(RootPath, book);
+			return JsonSerializer.Deserialize<Book>(File.ReadAllText(fullpath));
 		}
-		/// <summary>Dictionary of all books available in this bible, mapped to their regional names.</summary>
-		public Dictionary<BibleBook, string> RegionalNames { get; }
 		/// <summary>The number of books in the loaded bible</summary>
-		public readonly byte BookCounts;
+		public int BookCounts => Descriptor.RegionalName.Keys.Count;
 		/// <summary>
 		/// Returns the number of chapters in a given book of the loaded bible
 		/// </summary>
@@ -38,8 +37,8 @@ namespace AionianApp
 		/// <returns>The number of chapters in the given book of the loaded bible</returns>
 		public byte GetChapterCount(BibleBook book)
 		{
-			if (RegionalNames.ContainsKey(book) == false) throw new ArgumentException("The given key does not exist in the loaded bible!");
-			return (byte)LoadedBible.Books[book].Chapter.Count;
+			if (!Descriptor.RegionalName.ContainsKey(book)) throw new ArgumentException("The given key does not exist in the loaded bible!");
+			return (byte)FetchBook(book).Chapter.Count;
 		}
 		/// <summary>Returns the next chapter for a given book and chapter in the loaded bible</summary>
 		/// <param name="currentBook">The book currently at</param>
@@ -51,9 +50,9 @@ namespace AionianApp
 			if (GetChapterCount(currentBook) < currentChapter)
 			{
 				currentChapter = 1;
-				BibleBook[] booklist = RegionalNames.Keys.ToArray();
+				BibleBook[] booklist = Descriptor.RegionalName.Keys.ToArray();
 				int idx = Array.IndexOf(booklist, currentBook);
-				currentBook = booklist[(idx + 1)%booklist.Length];
+				currentBook = booklist[(idx + 1) % booklist.Length];
 			}
 			return (currentBook, currentChapter);
 		}
@@ -66,9 +65,9 @@ namespace AionianApp
 			currentChapter--;
 			if (currentChapter == 0)
 			{
-				BibleBook[] booklist = RegionalNames.Keys.ToArray();
+				BibleBook[] booklist = Descriptor.RegionalName.Keys.ToArray();
 				int idx = Array.IndexOf(booklist, currentBook);
-				currentBook = booklist[(booklist.Length + idx - 1)%booklist.Length];
+				currentBook = booklist[(booklist.Length + idx - 1) % booklist.Length];
 				currentChapter = GetChapterCount(currentBook);
 			}
 			return (currentBook, currentChapter);
@@ -77,6 +76,6 @@ namespace AionianApp
 		/// <param name="book">BibleBook to load</param>
 		/// <param name="chapter">Selected chapter</param>
 		/// <returns>A dictionary of verses</returns>
-		public Dictionary<byte, string> LoadChapter(BibleBook book, byte chapter) => LoadedBible.Books[book].Chapter[chapter];
+		public Dictionary<byte, string> LoadChapter(BibleBook book, byte chapter) => FetchBook(book).Chapter[chapter];
 	}
 }

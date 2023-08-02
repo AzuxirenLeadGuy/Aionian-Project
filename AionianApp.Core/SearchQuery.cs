@@ -19,16 +19,15 @@ namespace AionianApp
 		Regex,
 	}
 	/// <summary>Prepares a Search operation for a given string</summary>
-	public struct SearchQuery
+	public readonly struct SearchQuery
 	{
 		/// <summary>The regex string to search across the bible</summary>
 		public readonly string SearchString;
 		/// <summary>The Mode to search the bible in</summary>
 		public readonly SearchMode Mode;
 		/// <summary>
-		/// Creates the query object with the given options
-		///
-		/// The input argument is converted into its regex equivalent given the mode to search
+		/// <para>Creates the query object with the given options</para>
+		/// <para>The input argument is converted into its regex equivalent given the mode to search</para>
 		/// </summary>
 		/// <param name="query">The string query to search</param>
 		/// <param name="mode">The mode to search</param>
@@ -65,7 +64,7 @@ namespace AionianApp
 			else if (Regex.Match(query, "[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && (Mode == SearchMode.MatchAnyWord || Mode == SearchMode.MatchAllWords))
 				throw new ArgumentException(message: "Cannot use punctutations for word search. Please use Regex search for that", paramName: nameof(query));
 			else if (query.Count(x => x == ' ') >= 5 && Mode == SearchMode.MatchAllWords)
-				throw new ArgumentException(message: @"Option 'Search for All of the words' is not available for more than 5 words.", paramName: nameof(query));
+				throw new ArgumentException(message: "Option 'Search for All of the words' is not available for more than 5 words.", paramName: nameof(query));
 			//All exception cases completed
 			switch (Mode)
 			{
@@ -75,7 +74,7 @@ namespace AionianApp
 				case SearchMode.MatchAllWords:
 					string[] words = query.Split(separator: new char[] { ' ' }, options: StringSplitOptions.RemoveEmptyEntries);
 					StringBuilder regexpreparer = new();
-					foreach (string word in words) _ = regexpreparer.Append($"(?=.*\\b{word}\\b)");
+					foreach (string word in words) _ = regexpreparer.Append("(?=.*\\b").Append(word).Append("\\b)");
 					query = regexpreparer.Append("(^.*$)").ToString();
 					break;
 				case SearchMode.Regex://No need to change query
@@ -96,16 +95,17 @@ namespace AionianApp
 		{
 			Regex r = new(SearchString, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
 			float CurrentProgress = 0, ProgressInc = 1.0f / 66.0f;
-			foreach (KeyValuePair<BibleBook, Book> bk in searchBible.Books)
+			foreach (BibleBook bk in searchBible.Descriptor.RegionalName.Keys)
 			{
-				foreach (KeyValuePair<byte, Dictionary<byte, string>> ch in bk.Value.Chapter)
+				var bookvalue = searchBible.FetchBook(bk);
+				foreach (KeyValuePair<byte, Dictionary<byte, string>> ch in bookvalue.Chapter)
 				{
 					foreach (KeyValuePair<byte, string> v in ch.Value)
 					{
 						if (ct.CanBeCanceled && ct.IsCancellationRequested) goto ex;
 						if (r.Match(v.Value).Success)
 						{
-							yield return new BibleReference() { Book = bk.Key, Chapter = ch.Key, Verse = v.Key };
+							yield return new BibleReference() { Book = bk, Chapter = ch.Key, Verse = v.Key };
 						}
 					}
 				}
