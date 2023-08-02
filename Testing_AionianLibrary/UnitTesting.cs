@@ -18,7 +18,8 @@ public class UnitTest1
 	[TestMethod]
 	public void BibleLinkDownloading()
 	{
-		Bible englishBible = Bible.ExtractBible(Link.DownloadStream());
+		var (desc, books) = Bible.ExtractBible(Link.DownloadStream());
+		SimpleBible englishBible = new(desc, books);
 		Assert.AreEqual("In the beginning, God created the heavens and the earth.", englishBible[BibleBook.Genesis, 1, 1]);
 	}
 	[TestMethod]
@@ -34,7 +35,8 @@ public class UnitTest1
 	{
 		(BibleLink Link, ulong SizeInBytes)[] allLinks = BibleLink.GetAllUrlsFromWebsite();
 		BibleLink link = allLinks.First((x) => x.Link.Language == "Albanian-Tosk").Link;
-		Bible bible = Bible.ExtractBible(link.DownloadStream());
+		var (desc, books) = Bible.ExtractBible(Link.DownloadStream());
+		SimpleBible bible = new(desc, books);
 		Assert.AreEqual("1 i Samuelit", bible.Books[BibleBook.I_Samuel].RegionalBookName);
 	}
 }

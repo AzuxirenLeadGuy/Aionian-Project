@@ -6,7 +6,7 @@ namespace Aionian
 	public class SimpleBible : Bible
 	{
 		/// <summary> The books in this bible</summary>
-		protected Dictionary<BibleBook, Book> Books;
+		public readonly Dictionary<BibleBook, Book> Books;
 		/// <summary> Initializes a SimpleBible object </summary>
 		/// <param name="desc">The description of the bible</param>
 		/// <param name="books">The books of the bible</param>
