@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Handlers;
+using System.Text.RegularExpressions;
 
 namespace AionianApp.Terminal
 {
