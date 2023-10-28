@@ -42,7 +42,8 @@ public abstract class Bible
 			"ROM","1CO","2CO","GAL","EPH","PHI","COL","1TH","2TH","1TI","2TI",
 			"TIT","PHM","HEB","JAM","1PE","2PE","1JO","2JO","3JO","JUD","REV"
 	};
-	private enum ReadProgress : byte { StartBook, ReadVerse, StopChapter, StopBook, Comments };
+	private enum ReadProgress : byte { StartKeyValComments, BookStart, VerseRead, EndStream };
+	private enum InputType : byte { Comments, BookStartComment, VerseContent, EndOfFile };
 	/// <summary>
 	/// Creates a bible from the inputted stream of a Aionian bible noia Database
 	/// </summary>
@@ -62,60 +63,72 @@ public abstract class Bible
 		(string language, string title) = (tl[1], tl[2]);
 		Dictionary<BibleBook, string> RegionalName = new();
 		Dictionary<BibleBook, Book> books = new();
-		ReadProgress mode;
+		ReadProgress mode = ReadProgress.StartKeyValComments;
+		InputType inputType;
 		void process(string[] rows)
 		{
+			byte chap;
 			switch (mode)
 			{
-				case ReadProgress.StartBook:
-					CurrentBook = (BibleBook)byte.Parse(rows[1]);
-					if (CurrentBook!=BibleBook.NULL)
+				case ReadProgress.StartKeyValComments:
+					if (inputType == InputType.Comments) break;
+					else if (inputType == InputType.BookStartComment)
+					{
+						mode = ReadProgress.BookStart;
 						RegionalName.Add(CurrentBook = (BibleBook)byte.Parse(rows[1]), rows[4]);
+						break;
+					}
+					else throw new InvalidDataException("Expected StartBookComment token. Invalid data format!");
+				case ReadProgress.BookStart:
+					if (inputType == InputType.VerseContent)
+					{
+						mode = ReadProgress.VerseRead;
+						goto case ReadProgress.VerseRead;
+					}
+					else if (inputType == InputType.Comments) break;
+					else throw new InvalidDataException("Expected Verse token. Invalid data format!");
+				case ReadProgress.VerseRead:
+					if (inputType == InputType.BookStartComment)
+					{
+						CurrentBookData[CurrentChapter] = CurrentChapterData;
+						books[CurrentBook] = new((byte)CurrentBook, CurrentBookData, RegionalName[CurrentBook]);
+						RegionalName.Add(CurrentBook = (BibleBook)byte.Parse(rows[1]), rows[4]);
+						(CurrentBookData, CurrentChapterData, CurrentChapter) = (new(), new(), 1);
+						mode = ReadProgress.BookStart;
+						break;
+					}
+					else if (inputType == InputType.EndOfFile)
+					{
+						mode = ReadProgress.EndStream;
+						goto case ReadProgress.EndStream;
+					}
+					else if (inputType == InputType.Comments) break;
+					else if ((chap = byte.Parse(rows[2])) != CurrentChapter)
+					{
+						CurrentBookData[CurrentChapter] = CurrentChapterData;
+						(CurrentChapterData, CurrentChapter) = (new(), chap);
+					}
+					CurrentChapterData[byte.Parse(rows[3])] = rows[4];
 					break;
-				case ReadProgress.ReadVerse:
-					byte verseno = byte.Parse(rows[3]);//Get the Verse number
-					string verse = rows[4];//Get the verse content
-					CurrentChapterData[verseno] = verse;
-					break;
-				case ReadProgress.StopChapter:
-					var chapter = byte.Parse(rows[2]);//Get the Chapter number
-					CurrentBookData[CurrentChapter] = CurrentChapterData;
-					CurrentChapterData = new();
-					CurrentChapter = chapter;
-					goto case ReadProgress.ReadVerse;
-				case ReadProgress.StopBook:
-					CurrentBookData[CurrentChapter] = CurrentChapterData;
-					CurrentChapterData = new();
-					books[CurrentBook] = new Book((byte)CurrentBook, CurrentBookData, RegionalName[CurrentBook]);
-					CurrentBookData = new();
-					CurrentChapter = 1;
-					goto case ReadProgress.StartBook;
-				case ReadProgress.Comments:
-					break;
-				default:
+				case ReadProgress.EndStream:
+					if (inputType != InputType.EndOfFile) throw new InvalidDataException("Recived some data after EOF!");
 					break;
 			}
 		}
-		string[] dummy = new string[] { "0", "0", "0", "0", "0", "0" };
 		do
 		{
 			if ((line = stream.ReadLine()?.Trim()) != null)
 			{
 				string[] rows = line.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-				if (line.StartsWith('0'))
-				{
-					var chap = byte.Parse(rows[2]);//Get the Chapter number
-					mode = chap == CurrentChapter ? ReadProgress.ReadVerse : ReadProgress.StopChapter;
-				}
-				else if (line.StartsWith("# BOOK"))
-					mode = CurrentBook == BibleBook.NULL ? ReadProgress.StartBook : ReadProgress.StopBook;
-				else mode = ReadProgress.Comments;
+				inputType = line.StartsWith('0') ? InputType.VerseContent
+					: line.StartsWith("# BOOK") ? InputType.BookStartComment
+					: InputType.Comments;
 				process(rows);
 			}
 			else
 			{
-				mode = ReadProgress.StopBook;
-				process(dummy);
+				inputType = InputType.EndOfFile;
+				process(Array.Empty<string>());
 				break;
 			}
 		}
