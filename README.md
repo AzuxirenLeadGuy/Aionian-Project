@@ -23,7 +23,7 @@ Provided with these are static utility methods, most importantly for getting all
 
 By using a stream, there is an additional option of downloading the file by the URL in the `BibleLink` object and opening it via a `Stream` to load the Bible. There is now also an Async method for downloading the bible with events that are fired on the update on progress.
 
-The bible struct can also be serialized in Json using `Newtonsoft.Json` package. The `System.Text.Json`package is incompatible since it cannot deal properly with `struct` types.
+The bible struct can also be serialized in Json using `System.Text.Json`package.
 
 You can add this package from [Nuget](https://www.nuget.org/packages/Azuxiren.Aionian/)
 
@@ -43,7 +43,7 @@ These are some of the major tasks that are to be done
 
 - Working on a cross-platform Aionian app (preferrably on the Uno platform)
 - Improving the Cross-refernces support
-- Populating the XUnit tests for the existing `Aionian` and `AionianApp.Core` projects.
+- Populating the unit tests (using package `Microsoft.NET.Test.Sdk`) for the existing `Aionian` and `AionianApp.Core` projects.
 - Creating wrappers for other language
 - Creating a helpful wiki and/or Github page
 - Any bug-fixes
@@ -60,11 +60,11 @@ Help/feedback on any aspect of the project is always welcome.
 # Building
 
 Building the projects requires dotnet-sdk, available for download from [Microsoft's dotnet-sdk official site](https://dotnet.microsoft.com/download). It is recommended to use the latest stable version of dotnet.
-The currently recommended version is [dotnet-sdk-5.0](https://dotnet.microsoft.com/download/dotnet/5.0)
+The currently recommended version is [dotnet-sdk-6](https://dotnet.microsoft.com/download/dotnet/)
 
 To generate executable of the terminal tool, run the following command
 
-    dotnet publish "path/to/Terminal.csproj" -f=net5.0 -c Release -o "path/of/output/files"
+    dotnet publish "path/to/Terminal.csproj" -f=net6.0 -c Release -o "path/of/output/files"
 
 # Running
 
