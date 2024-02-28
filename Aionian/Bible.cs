@@ -71,22 +71,24 @@ public abstract class Bible
 			switch (mode)
 			{
 				case ReadProgress.StartKeyValComments:
-					if (inputType == InputType.Comments) break;
+					if (inputType == InputType.Comments) { break; }
 					else if (inputType == InputType.BookStartComment)
 					{
 						mode = ReadProgress.BookStart;
 						RegionalName.Add(CurrentBook = (BibleBook)byte.Parse(rows[1]), rows[4]);
 						break;
 					}
-					else throw new InvalidDataException("Expected StartBookComment token. Invalid data format!");
+					else { throw new InvalidDataException("Expected StartBookComment token. Invalid data format!"); }
+
 				case ReadProgress.BookStart:
 					if (inputType == InputType.VerseContent)
 					{
 						mode = ReadProgress.VerseRead;
 						goto case ReadProgress.VerseRead;
 					}
-					else if (inputType == InputType.Comments) break;
-					else throw new InvalidDataException("Expected Verse token. Invalid data format!");
+					else if (inputType == InputType.Comments) { break; }
+					else { throw new InvalidDataException("Expected Verse token. Invalid data format!"); }
+
 				case ReadProgress.VerseRead:
 					if (inputType == InputType.BookStartComment)
 					{
@@ -102,7 +104,7 @@ public abstract class Bible
 						mode = ReadProgress.EndStream;
 						goto case ReadProgress.EndStream;
 					}
-					else if (inputType == InputType.Comments) break;
+					else if (inputType == InputType.Comments) { break; }
 					else if ((chap = byte.Parse(rows[2])) != CurrentChapter)
 					{
 						CurrentBookData[CurrentChapter] = CurrentChapterData;
@@ -115,33 +117,19 @@ public abstract class Bible
 					break;
 			}
 		}
-		do
+		while ((line = stream.ReadLine()?.Trim()) != null)
 		{
-			if ((line = stream.ReadLine()?.Trim()) != null)
-			{
-				string[] rows = line.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
-				inputType = line.StartsWith('0') ? InputType.VerseContent
-					: line.StartsWith("# BOOK") ? InputType.BookStartComment
-					: InputType.Comments;
-				process(rows);
-			}
-			else
-			{
-				inputType = InputType.EndOfFile;
-				process(Array.Empty<string>());
-				break;
-			}
+			string[] rows = line.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+			inputType = line.StartsWith('0') ? InputType.VerseContent
+				: line.StartsWith("# BOOK") ? InputType.BookStartComment
+				: InputType.Comments;
+			process(rows);
 		}
-		while (true);
+		inputType = InputType.EndOfFile;
+		process(Array.Empty<string>());
 		return
 		(
-			new BibleDescriptor()
-			{
-				Title = title,
-				Language = language,
-				AionianEdition = aionianEdition,
-				RegionalName = RegionalName,
-			},
+			new BibleDescriptor() { Title = title, Language = language, AionianEdition = aionianEdition, RegionalName = RegionalName },
 			books
 		);
 	}
