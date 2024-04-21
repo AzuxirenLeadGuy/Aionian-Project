@@ -14,9 +14,9 @@ public readonly record struct Book
 	/// <summary> Returns the current BibleBook enum of this chapter </summary>
 	public BibleBook CurrentBibleBook => (BibleBook)BookIndex;
 	/// <summary> The name of the book in English</summary>
-	public string BookName => 
+	public string BookName =>
 		Enum.GetName(
-			typeof(BibleBook), 
+			typeof(BibleBook),
 			(BibleBook)BookIndex) ?? throw new ArgumentException(
 				"Enum cannot be parsed!");
 }

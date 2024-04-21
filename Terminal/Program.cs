@@ -116,7 +116,12 @@ namespace AionianApp.Terminal
 						}
 					}
 				sr: Dictionary<byte, string> chap = chapterwiseBible.LoadChapter(currentBook, currentChapter);
-					DisplayChapter(chap, Bible.ShortBookNames[(byte)currentBook], currentChapter);
+					DisplayChapter(
+						chap, 
+						Enum.GetName(
+							typeof(BibleBook), 
+							currentBook) ?? "<UNKNOWN>", 
+						currentChapter);
 					PrintSep();
 					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select\n4. Back to main menu");
 					if (byte.TryParse(Console.ReadLine(), out byte rgoption))
@@ -283,19 +288,19 @@ namespace AionianApp.Terminal
 			}
 			BibleLink[] DisplayDownloadable()
 			{
-				(BibleLink Link, ulong SizeInBytes)[] results = BibleLink.GetAllUrlsFromWebsite();
+				Listing[] results = BibleLink.GetAllUrlsFromWebsite();
 				ConsoleTable table = new("ID", "Title", "Language", "Size", "|", "ID", "Title", "Language", "Size");
 				for (int i = 0; i < results.Length; i += 2)
 				{
 					BibleLink link = results[i].Link;
 					BibleLink lin2 = results[i + 1].Link;
 					Debug.WriteLine($"link={AssetDirName(link)}; lin2={AssetDirName(lin2)};\n{link.Equals(lin2)} : {link.CompareTo(lin2)}\n\n");
-					_ = table.AddRow(i + 1, link.Title, link.Language, $"{results[i].SizeInBytes / 1048576.0f:0.000} MB", "|", i + 2, lin2.Title, lin2.Language, $"{results[i + 1].SizeInBytes / 1048576.0f:0.000} MB");
+					_ = table.AddRow(i + 1, link.Title, link.Language, $"{results[i].Bytes / 1048576.0f:0.000} MB", "|", i + 2, lin2.Title, lin2.Language, $"{results[i + 1].Bytes / 1048576.0f:0.000} MB");
 				}
 				table.Options.EnableCount = false;
 				table.Write();
 				List<BibleLink> links = new();
-				foreach ((BibleLink Link, ulong SizeInBytes) in results) links.Add(Link);
+				foreach (Listing item in results) links.Add(item.Link);
 				return links.ToArray();
 			}
 		}

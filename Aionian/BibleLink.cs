@@ -6,6 +6,14 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Aionian;
+/// <summary>The listing information available</summary>
+public readonly record struct Listing
+{
+	/// <summary>The link for the bibles</summary>
+	public BibleLink Link { get; init; }
+	/// <summary>The size of the download in bytes</summary>
+	public ulong Bytes { get; init; }
+}
 /// <summary>Represents a single link of an Aionian Bible</summary>
 public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<BibleLink>
 {
@@ -47,13 +55,15 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 	/// </summary>
 	/// <returns>Returns the URL</returns>
 	public override string ToString() => $"{Language}|{Title}";
+	/// <summary> The default URL for downloading the assets </summary>
+	public const string default_url = "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/";
 	/// <summary>
 	/// Returns a touple of all links available for download. Needless to say, this function requres internet
 	/// </summary>
 	/// <returns>Returs an array of every link avaialble to download in the Aionian</returns>
-	public static (BibleLink Link, ulong SizeInBytes)[] GetAllUrlsFromWebsite(string resourceSite = "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/")
+	public static Listing[] GetAllUrlsFromWebsite(string resourceSite = default_url)
 	{
-		List<(BibleLink Link, ulong SizeInBytes)> links = new();
+		List<Listing> links = new();
 		string base_url = resourceSite + "Content.txt";
 		try
 		{
@@ -64,7 +74,7 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 			{
 				while (!sr.EndOfStream)
 				{
-					string[]? responsestring = (sr.ReadLine()?.Split('\t')) ?? 
+					string[]? responsestring = (sr.ReadLine()?.Split('\t')) ??
 						throw new ArgumentException(
 							"Unable to parse data from online dataset");
 					string url = resourceSite + responsestring[0];
@@ -72,25 +82,28 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 					bool aionianEdition = responsestring[0].EndsWith(
 						"Aionian-Edition.noia");
 					string[] tl = responsestring[0].Replace(
-						"---", 
+						"---",
 						"|").Split(
 							'|');
 					string language = tl[1];
 					string title = tl[2];
-					links.Add((
-						new BibleLink(
-							title, 
-							language, 
-							url,
-							aionianEdition), 
-						size));
+					links.Add(
+						new Listing()
+						{
+							Link = new BibleLink(
+								title,
+								language,
+								url,
+								aionianEdition),
+							Bytes = size
+						});
 				}
 			}
 			return links.ToArray();
 		}
 		catch
 		{
-			return Array.Empty<(BibleLink Link, ulong SizeInBytes)>();
+			return Array.Empty<Listing>();
 		}
 	}
 	/// <summary>
@@ -106,7 +119,7 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 	/// Bible downloadedBible = Bible.ExtractBible(link.DownloadStream()); //Convert the downloaded .noia file into a Bible
 	/// </code>
 	/// </example>
-	public StreamReader DownloadStream() => 
+	public StreamReader DownloadStream() =>
 		new(
 			new HttpClient().GetStreamAsync(
 				URL).Result);
@@ -118,35 +131,35 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 	/// <param name="cancellationToken">The event called when the download is completed</param>
 	/// <returns>Returns the FileStream of the .noia database of Bible</returns>
 	public async Task<StreamReader> DownloadStreamAsync(
-		HttpMessageHandler? handler = null, 
+		HttpMessageHandler? handler = null,
 		CancellationToken cancellationToken = default)
 	{
-		using HttpClient client = handler != null ? 
-			new(handler) : 
+		using HttpClient client = handler != null ?
+			new(handler) :
 			new();
 		Stream st = await client.GetStreamAsync(
-			URL, 
+			URL,
 			cancellationToken);
 		return new StreamReader(st);
 	}
 	/// <summary>Compares the two instances</summary>
 	/// <param name="left">BibleLink instance</param>
 	/// <param name="right">BibleLink instance</param>
-	public static bool operator <(BibleLink left, BibleLink right) => 
+	public static bool operator <(BibleLink left, BibleLink right) =>
 		left.CompareTo(right) < 0;
 	/// <summary>Compares the two instances</summary>
 	/// <param name="left">BibleLink instance</param>
 	/// <param name="right">BibleLink instance</param>
-	public static bool operator <=(BibleLink left, BibleLink right) => 
+	public static bool operator <=(BibleLink left, BibleLink right) =>
 		left.CompareTo(right) <= 0;
 	/// <summary>Compares the two instances</summary>
 	/// <param name="left">BibleLink instance</param>
 	/// <param name="right">BibleLink instance</param>
-	public static bool operator >(BibleLink left, BibleLink right) => 
+	public static bool operator >(BibleLink left, BibleLink right) =>
 		left.CompareTo(right) > 0;
 	/// <summary>Compares the two instances</summary>
 	/// <param name="left">BibleLink instance</param>
 	/// <param name="right">BibleLink instance</param>
-	public static bool operator >=(BibleLink left, BibleLink right) => 
+	public static bool operator >=(BibleLink left, BibleLink right) =>
 		left.CompareTo(right) >= 0;
 }

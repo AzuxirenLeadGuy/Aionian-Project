@@ -119,11 +119,12 @@ namespace AionianApp
 			try
 			{
 				StreamReader stream = await link.DownloadStreamAsync(handler);
-				var (desc, books) = Bible.ExtractBible(stream);
+				DownloadInfo data = Bible.ExtractBible(stream);
+				BibleDescriptor desc = data.Descriptor;
 				string path = AssetPath(AssetDirName(desc));
 				Directory.CreateDirectory(path);
 				SaveFileAsJson<BibleDescriptor>(desc, AssetFileName(desc));
-				foreach (var kp in books)
+				foreach (var kp in data.Books)
 				{
 					SaveFileAsJson<Book>(kp.Value, AssetFileName(kp.Key, desc));
 				}

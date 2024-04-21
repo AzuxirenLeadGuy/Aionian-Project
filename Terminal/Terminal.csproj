@@ -14,7 +14,7 @@
 	</ItemGroup>
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
