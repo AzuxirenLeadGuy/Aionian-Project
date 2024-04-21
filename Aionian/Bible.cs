@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 namespace Aionian;
+internal enum ReadProgress : byte { StartKeyValComments, BookStart, VerseRead, EndStream };
+internal enum InputType : byte { Comments, BookStartComment, VerseContent, EndOfFile };
+/// <summary>Represents the data format of a downloaded file</summary>
+public readonly record struct DownloadInfo
+{
+	/// <summary>The description/metadata for the bible</summary>
+	public readonly BibleDescriptor Descriptor { get; init; }
+	/// <summary>The collection of books available to read</summary>
+	public readonly Dictionary<BibleBook, Book> Books { get; init; }
+}
 /// <summary> This denotes a Bible of a specific Language and Version/Title</summary>
 public abstract class Bible
 {
@@ -14,42 +24,19 @@ public abstract class Bible
 	/// <summary>
 	/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 	/// </summary>
-	public string this[BibleBook b, byte c, byte v] => FetchBook(b).Chapter[c][v];
+	public string this[BibleBook b, byte c, byte v] =>
+		FetchBook(b).Chapter[c][v];
 	/// <summary>
 	/// Indexer to return the verse(as a string) given any book,chapter number and verse index
 	/// </summary>
-	public string this[BibleReference v] => this[v.Book, v.Chapter, v.Verse];
-	/// <summary>
-	/// <para>
-	/// Since the *.noia database identifies every book (irrespective of the bible language) with these short names, this array is used for that purpose while Extracting it.
-	/// Contains a list of Short Names of Books. The first index is NULL so as to match the enum BibleBook index and make its value interconvertible to this array's index
-	/// </para>
-	/// <para>This way, we can get short name of a book as</para>
-	/// <code>
-	///
-	/// string shortname = ShortBookNames[(byte)BibleBook.Leviticus]
-	///
-	/// </code>
-	/// </summary>
-	/// <value></value>
-	public static readonly string[] ShortBookNames =
-	{
-			"",
-			"GEN","EXO","LEV","NUM","DEU","JOS","JDG","RUT","1SA","2SA","1KI",
-			"2KI","1CH","2CH","EZR","NEH","EST","JOB","PSA","PRO","ECC","SOL",
-			"ISA","JER","LAM","EZE","DAN","HOS","JOE","AMO","OBA","JON","MIC",
-			"NAH","HAB","ZEP","HAG","ZEC","MAL","MAT","MAR","LUK","JOH","ACT",
-			"ROM","1CO","2CO","GAL","EPH","PHI","COL","1TH","2TH","1TI","2TI",
-			"TIT","PHM","HEB","JAM","1PE","2PE","1JO","2JO","3JO","JUD","REV"
-	};
-	private enum ReadProgress : byte { StartKeyValComments, BookStart, VerseRead, EndStream };
-	private enum InputType : byte { Comments, BookStartComment, VerseContent, EndOfFile };
+	public string this[BibleReference v] =>
+		this[v.Book, v.Chapter, v.Verse];
 	/// <summary>
 	/// Creates a bible from the inputted stream of a Aionian bible noia Database
 	/// </summary>
 	/// <param name="stream">The Stream to the *.noia Database</param>
 	/// <returns>The initiated Bible from the stream is returned</returns>
-	public static (BibleDescriptor descriptor, Dictionary<BibleBook, Book> books) ExtractBible(StreamReader stream)
+	public static DownloadInfo ExtractBible(StreamReader stream)
 	{
 		string? line;
 		byte CurrentChapter = 1;
@@ -75,10 +62,16 @@ public abstract class Bible
 					else if (inputType == InputType.BookStartComment)
 					{
 						mode = ReadProgress.BookStart;
-						RegionalName.Add(CurrentBook = (BibleBook)byte.Parse(rows[1]), rows[4]);
+						RegionalName.Add(
+							CurrentBook = (BibleBook)byte.Parse(rows[1]),
+							rows[4]);
 						break;
 					}
-					else { throw new InvalidDataException("Expected StartBookComment token. Invalid data format!"); }
+					else
+					{
+						throw new InvalidDataException(
+						"Expected StartBookComment token. Invalid data format!");
+					}
 
 				case ReadProgress.BookStart:
 					if (inputType == InputType.VerseContent)
@@ -87,15 +80,28 @@ public abstract class Bible
 						goto case ReadProgress.VerseRead;
 					}
 					else if (inputType == InputType.Comments) { break; }
-					else { throw new InvalidDataException("Expected Verse token. Invalid data format!"); }
+					else
+					{
+						throw new InvalidDataException(
+						"Expected Verse token. Invalid data format!");
+					}
 
 				case ReadProgress.VerseRead:
 					if (inputType == InputType.BookStartComment)
 					{
 						CurrentBookData[CurrentChapter] = CurrentChapterData;
-						books[CurrentBook] = new((byte)CurrentBook, CurrentBookData, RegionalName[CurrentBook]);
-						RegionalName.Add(CurrentBook = (BibleBook)byte.Parse(rows[1]), rows[4]);
-						(CurrentBookData, CurrentChapterData, CurrentChapter) = (new(), new(), 1);
+						books[CurrentBook] = new()
+						{
+							BookIndex = (byte)CurrentBook,
+							Chapter = CurrentBookData,
+							RegionalBookName = RegionalName[CurrentBook],
+						};
+						RegionalName.Add(
+							CurrentBook = (BibleBook)byte.Parse(rows[1]),
+							rows[4]);
+						CurrentBookData = new();
+						CurrentChapterData = new();
+						CurrentChapter = 1;
 						mode = ReadProgress.BookStart;
 						break;
 					}
@@ -108,29 +114,39 @@ public abstract class Bible
 					else if ((chap = byte.Parse(rows[2])) != CurrentChapter)
 					{
 						CurrentBookData[CurrentChapter] = CurrentChapterData;
-						(CurrentChapterData, CurrentChapter) = (new(), chap);
+						CurrentChapterData = new();
+						CurrentChapter = chap;
 					}
 					CurrentChapterData[byte.Parse(rows[3])] = rows[4];
 					break;
 				case ReadProgress.EndStream:
-					if (inputType != InputType.EndOfFile) throw new InvalidDataException("Recived some data after EOF!");
+					if (inputType != InputType.EndOfFile) throw new InvalidDataException(
+						"Recived some data after EOF!");
 					break;
 			}
 		}
 		while ((line = stream.ReadLine()?.Trim()) != null)
 		{
-			string[] rows = line.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 			inputType = line.StartsWith('0') ? InputType.VerseContent
 				: line.StartsWith("# BOOK") ? InputType.BookStartComment
 				: InputType.Comments;
-			process(rows);
+			process(
+				line.Split(
+				new char[] { '\t' },
+				StringSplitOptions.RemoveEmptyEntries));
 		}
 		inputType = InputType.EndOfFile;
 		process(Array.Empty<string>());
-		return
-		(
-			new BibleDescriptor() { Title = title, Language = language, AionianEdition = aionianEdition, RegionalName = RegionalName },
-			books
-		);
+		return new DownloadInfo()
+		{
+			Descriptor = new BibleDescriptor()
+			{
+				Title = title,
+				Language = language,
+				AionianEdition = aionianEdition,
+				RegionalName = RegionalName
+			},
+			Books = books
+		};
 	}
 }
