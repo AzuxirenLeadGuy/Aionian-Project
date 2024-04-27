@@ -23,11 +23,10 @@ namespace AionianApp
 		public ChapterwiseBible(BibleDescriptor loadedBible, string path) : base(loadedBible) => RootPath = path;
 
 		/// <summary>Fetches a book from this bible</summary>
-		public override Book FetchBook(BibleBook book)
-		{
-			string fullpath = GetBookPath(RootPath, book);
-			return JsonSerializer.Deserialize<Book>(File.ReadAllText(fullpath));
-		}
+		public override Book FetchBook(BibleBook book) =>
+			JsonSerializer.Deserialize<Book>(
+				File.ReadAllText(
+					GetBookPath(RootPath, book)));
 		/// <summary>The number of books in the loaded bible</summary>
 		public int BookCounts => Descriptor.RegionalName.Keys.Count;
 		/// <summary>
@@ -35,16 +34,17 @@ namespace AionianApp
 		/// </summary>
 		/// <param name="book">The book to check for the count of chapters</param>
 		/// <returns>The number of chapters in the given book of the loaded bible</returns>
-		public byte GetChapterCount(BibleBook book)
-		{
-			if (!Descriptor.RegionalName.ContainsKey(book)) throw new ArgumentException("The given key does not exist in the loaded bible!");
-			return (byte)FetchBook(book).Chapter.Count;
-		}
+		public byte GetChapterCount(BibleBook book) =>
+			Descriptor.RegionalName.ContainsKey(book) ?
+				(byte)FetchBook(book).Chapter.Count :
+				throw new ArgumentException("Given key does not exist in this bible");
 		/// <summary>Returns the next chapter for a given book and chapter in the loaded bible</summary>
 		/// <param name="currentBook">The book currently at</param>
 		/// <param name="currentChapter">The chapter currently at</param>
 		/// <returns>Tuple of book and chapter that succeeds this current chapter</returns>
-		public (BibleBook BookEnum, byte Chapter) NextChapter(BibleBook currentBook, byte currentChapter)
+		public (BibleBook BookEnum, byte Chapter) NextChapter(
+			BibleBook currentBook, 
+			byte currentChapter)
 		{
 			currentChapter++;
 			if (GetChapterCount(currentBook) < currentChapter)
@@ -60,7 +60,9 @@ namespace AionianApp
 		/// <param name="currentBook">The book currently at</param>
 		/// <param name="currentChapter">The chapter currently at</param>
 		/// <returns>Tuple of book and chapter that succeeds this current chapter</returns>
-		public (BibleBook BookEnum, byte Chapter) PreviousChapter(BibleBook currentBook, byte currentChapter)
+		public (BibleBook BookEnum, byte Chapter) PreviousChapter(
+			BibleBook currentBook, 
+			byte currentChapter)
 		{
 			currentChapter--;
 			if (currentChapter == 0)
@@ -76,6 +78,7 @@ namespace AionianApp
 		/// <param name="book">BibleBook to load</param>
 		/// <param name="chapter">Selected chapter</param>
 		/// <returns>A dictionary of verses</returns>
-		public Dictionary<byte, string> LoadChapter(BibleBook book, byte chapter) => FetchBook(book).Chapter[chapter];
+		public Dictionary<byte, string> LoadChapter(BibleBook book, byte chapter) => 
+			FetchBook(book).Chapter[chapter];
 	}
 }

@@ -60,26 +60,45 @@ namespace AionianApp
 		{
 			Mode = mode;
 			if (query.Length == 0)
-				throw new ArgumentException(message: "No input recieved", paramName: nameof(query));
-			else if (Regex.Match(query, "[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && (Mode == SearchMode.MatchAnyWord || Mode == SearchMode.MatchAllWords))
-				throw new ArgumentException(message: "Cannot use punctutations for word search. Please use Regex search for that", paramName: nameof(query));
+				throw new ArgumentException(
+					message: "No input recieved", paramName: nameof(query));
+			else if (Regex.Match(
+				query, 
+				"[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && 
+				Mode!=SearchMode.Regex)
+				throw new ArgumentException(
+					message: "Cannot use punctutations for word search. Please use Regex search for that", 
+					paramName: nameof(query));
 			else if (query.Count(x => x == ' ') >= 5 && Mode == SearchMode.MatchAllWords)
-				throw new ArgumentException(message: "Option 'Search for All of the words' is not available for more than 5 words.", paramName: nameof(query));
+				throw new ArgumentException(
+					message: "Option 'Search for All of the words' is not available for more than 5 words.", 
+					paramName: nameof(query));
 			//All exception cases completed
 			switch (Mode)
 			{
 				case SearchMode.MatchAnyWord:
-					query = new StringBuilder("(").Append(query).Replace(" ", ")|(").Append(')').ToString();//Use regex that matches any one of the words
+					query = new StringBuilder("(").
+						Append(query).
+						Replace(" ", ")|(").
+						Append(')').
+						ToString();//Use regex that matches any one of the words
 					break;
 				case SearchMode.MatchAllWords:
-					string[] words = query.Split(separator: new char[] { ' ' }, options: StringSplitOptions.RemoveEmptyEntries);
+					string[] words = query.Split(
+						new char[] { ' ' }, 
+						StringSplitOptions.RemoveEmptyEntries);
 					StringBuilder regexpreparer = new();
-					foreach (string word in words) _ = regexpreparer.Append("(?=.*\\b").Append(word).Append("\\b)");
+					foreach (string word in words) _ = regexpreparer.
+						Append("(?=.*\\b").
+						Append(word).
+						Append("\\b)");
 					query = regexpreparer.Append("(^.*$)").ToString();
 					break;
 				case SearchMode.Regex://No need to change query
 					break;
-				default: throw new ArgumentException(message: "Undefined Mode used for SearchMode", paramName: nameof(mode));
+				default: throw new ArgumentException(
+					"Undefined Mode used for SearchMode", 
+					nameof(mode));
 			}
 			SearchString = query;
 		}
@@ -91,10 +110,16 @@ namespace AionianApp
 		/// <param name="onProgressUpdate">The IProgress</param>
 		/// <param name="ct">The CancellationToken</param>
 		/// <returns></returns>
-		public IEnumerable<BibleReference> GetResults(Bible searchBible, bool ignoreCase = true, IProgress<float>? onProgressUpdate = null, CancellationToken ct = default)
+		public IEnumerable<BibleReference> GetResults(
+			Bible searchBible, 
+			bool ignoreCase = true, 
+			IProgress<float>? onProgressUpdate = null, 
+			CancellationToken ct = default)
 		{
-			Regex r = new(SearchString, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
-			float CurrentProgress = 0, ProgressInc = 1.0f / 66.0f;
+			Regex r = new(
+				SearchString, 
+				ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
+			float CurrentProgress = 0, ProgressInc = 1.0f / searchBible.Descriptor.RegionalName.Keys.Count;
 			foreach (BibleBook bk in searchBible.Descriptor.RegionalName.Keys)
 			{
 				var bookvalue = searchBible.FetchBook(bk);
@@ -105,7 +130,12 @@ namespace AionianApp
 						if (ct.CanBeCanceled && ct.IsCancellationRequested) goto ex;
 						if (r.Match(v.Value).Success)
 						{
-							yield return new BibleReference() { Book = bk, Chapter = ch.Key, Verse = v.Key };
+							yield return new BibleReference() 
+							{ 
+								Book = bk, 
+								Chapter = ch.Key, 
+								Verse = v.Key 
+							};
 						}
 					}
 				}
