@@ -64,14 +64,14 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
-				ChapterwiseBible chapterwiseBible = LoadChapterwiseBible(AvailableBibles[--bible]);
+				BibleReadingViewModel chapterwiseBible = new(this, AvailableBibles[--bible]);
 				List<string> allBookNames = new();
-				BibleBook[] books_list = chapterwiseBible.Descriptor.RegionalName.Keys.ToArray();
+				BibleBook[] books_list = chapterwiseBible.AvailableBooks;
 				int maxlength = 0, sno = 0;
-				foreach (var bkpair in books_list)
+				foreach (var bkpair in chapterwiseBible.AvailableBookNames)
 				{
 					++sno;
-					string str = $"{sno}. {chapterwiseBible.Descriptor.RegionalName[bkpair]}";
+					string str = $"{sno}. {bkpair}";
 					allBookNames.Add(str);
 					maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
 				}// Console.WriteLine($"{bk.BookIndex}. {bk.RegionalBookName}");
@@ -95,11 +95,12 @@ namespace AionianApp.Terminal
 					}
 				}
 				Console.WriteLine("Enter ID of the Book to read: ");
-				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= chapterwiseBible.BookCounts)
+				if (byte.TryParse(Console.ReadLine(), out byte bookid) && bookid >= 1 && bookid <= chapterwiseBible.BookCount)
 				{
 					byte currentChapter;
 					BibleBook currentBook = books_list[bookid - 1];
-					int len = chapterwiseBible.GetChapterCount(currentBook);
+					chapterwiseBible.LoadReading(currentBook);
+					int len = chapterwiseBible.AvailableChapters;
 					if (len == 1)
 					{
 						currentChapter = 1;
@@ -115,12 +116,13 @@ namespace AionianApp.Terminal
 							goto akag;
 						}
 					}
-				sr: Dictionary<byte, string> chap = chapterwiseBible.LoadChapter(currentBook, currentChapter);
+				sr: chapterwiseBible.LoadReading(currentBook, currentChapter);
+					Dictionary<byte, string> chap = chapterwiseBible.CurrentReading;
 					DisplayChapter(
-						chap, 
+						chap,
 						Enum.GetName(
-							typeof(BibleBook), 
-							currentBook) ?? "<UNKNOWN>", 
+							typeof(BibleBook),
+							currentBook) ?? "<UNKNOWN>",
 						currentChapter);
 					PrintSep();
 					Console.WriteLine("1. Read Next Chapter\n2. Read Previous Chapter\n3. Back to book select\n4. Back to main menu");
@@ -133,10 +135,14 @@ namespace AionianApp.Terminal
 							case 4:
 								goto skip;
 							case 1:
-								(currentBook, currentChapter) = chapterwiseBible.NextChapter(currentBook, currentChapter);
+								chapterwiseBible.NextChapter();
+								currentBook = chapterwiseBible.CurrentBook;
+								currentChapter = chapterwiseBible.CurrentChapter;
 								goto sr;
 							case 2:
-								(currentBook, currentChapter) = chapterwiseBible.PreviousChapter(currentBook, currentChapter);
+								chapterwiseBible.PrevChapter();
+								currentBook = chapterwiseBible.CurrentBook;
+								currentChapter = chapterwiseBible.CurrentChapter;
 								goto sr;
 							default: break;
 						}

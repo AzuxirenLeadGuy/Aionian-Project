@@ -1,5 +1,4 @@
 using Aionian;
-using AionianApp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,14 +20,18 @@ public class BibleReadingViewModel
 	protected KeyValuePair<BibleBook, string>[] _booksData;
 	/// <summary>Creates a viewmodel instance</summary>
 	/// <param name="app">The parent CoreApp that loads the configuration</param>
-	public BibleReadingViewModel(CoreApp app)
+	/// <param name="defaultLink">
+	/// The link to load this viewmodel with (by default, the first link in CoreApp will be selected)
+	/// </param>
+	public BibleReadingViewModel(CoreApp app, BibleDescriptor? defaultLink = null)
 	{
 		RunningApp = app;
 		_booksData = Array.Empty<KeyValuePair<BibleBook, string>>();
 		CurrentReading = new();
+		BibleDescriptor link = defaultLink ?? RunningApp.GetBibles().FirstOrDefault();
 		if (
 			RunningApp.GetBibles().Any() &&
-			!SelectBible(RunningApp.GetBibles().FirstOrDefault()))
+			!SelectBible(link))
 		{
 			throw new Exception("Could not load bible portion");
 		}
@@ -47,7 +50,7 @@ public class BibleReadingViewModel
 	/// <summary>Loads the current reading portionn</summary>
 	/// <param name="book">
 	/// The book to load. By default, loads as NULL which is updated
-    /// with the first book in the bible)
+	/// with the first book in the bible)
 	/// </param>
 	/// <param name="chapter">
 	/// The chapter of the bible to load. By default, loads the first chapter.
@@ -93,7 +96,7 @@ public class BibleReadingViewModel
 	{
 		if (_currentBible == null)
 			return false;
-		else if (CurrentChapter > 0)
+		else if (CurrentChapter > 1)
 			return LoadReading(CurrentBook, --CurrentChapter);
 		int idx = Array.FindIndex(
 			_booksData,
@@ -103,8 +106,11 @@ public class BibleReadingViewModel
 			0);
 	}
 	/// <summary>The names of the books in the currently loaded bible</summary>
-	public string[] AvailableBooks => _booksData.Select(
+	public string[] AvailableBookNames => _booksData.Select(
 		x => x.Value).ToArray();
+	/// <summary>The names of the books in the currently loaded bible</summary>
+	public BibleBook[] AvailableBooks => _booksData.Select(
+		x => x.Key).ToArray();
 	/// <summary> Details of currently selected bible (if any)</summary>
 	public BibleDescriptor SelectedBible => _currentBible?.Descriptor ?? default;
 	/// <summary>The current bible book loaded (if any)</summary>
@@ -113,4 +119,6 @@ public class BibleReadingViewModel
 	public int AvailableChapters => _loadedPortion.Chapter.Count;
 	/// <summary>The list of bibles available to read</summary>
 	public IEnumerable<BibleDescriptor> AvailableBibles => RunningApp.GetBibles();
+	/// <summary>The number of books in this bible</summary>
+	public int BookCount => _booksData.Length;
 }

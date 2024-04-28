@@ -22,12 +22,13 @@ namespace AionianApp
 		{
 			if (!Directory.Exists(AppDataFolderPath))
 				_ = Directory.CreateDirectory(AppDataFolderPath);
-			if (!File.Exists(AssetMainFilePath))
-				SaveAssetLog();
+			if (!File.Exists(AssetMainFilePath)) { SaveAssetLog(); }
 			else
+			{
 				AvailableBibles = LoadFileAsJson<List<BibleDescriptor>>(
 					AssetMainFilePath) ?? throw new Exception(
 						"Unable to load assets!");
+			}
 		}
 		/// <summary>
 		/// This list stores the available bibles this app has downloaded in its system
@@ -54,13 +55,13 @@ namespace AionianApp
 			AppDataFolderPath,
 			name);
 		/// <summary>
-		/// This is the file name of the Asset Log file: 
+		/// This is the file name of the Asset Log file:
 		/// the file in which the asset list metadata is stored at
 		/// </summary>
 		/// <returns>(string) Name of the Asset Log file</returns>
 		public virtual string AssetMainFilePath => AssetPath("Asset.dat");
 		/// <summary>
-		/// Deduces what the filename of the asset (intended to be Bible or BibleLink) will be, 
+		/// Deduces what the filename of the asset (intended to be Bible or BibleLink) will be,
 		/// given its properties
 		/// </summary>
 		/// <param name="title">Title of the bible</param>
@@ -70,7 +71,7 @@ namespace AionianApp
 		protected virtual string AssetDirName(string title, string lang, bool aionianEdition) =>
 			$"{title}-{lang}-{(aionianEdition ? "Aionian" : "Standard")}";
 		/// <summary>
-		/// Gets the folder name of the files for this Bible. This will be the (default) 
+		/// Gets the folder name of the files for this Bible. This will be the (default)
 		/// download destination of the link
 		/// </summary>
 		/// <param name="link">BibleLink object to load/download</param>
@@ -80,7 +81,7 @@ namespace AionianApp
 			link.Language,
 			link.AionianEdition);
 		/// <summary>
-		/// Gets the folder name of the files for this Bible. This will be the (default) 
+		/// Gets the folder name of the files for this Bible. This will be the (default)
 		/// file path to load/store the bible from
 		/// </summary>
 		/// <param name="bible">BibleDescriptor object to load/store</param>
@@ -90,7 +91,7 @@ namespace AionianApp
 			bible.Language,
 			bible.AionianEdition);
 		/// <summary>
-		/// Gets the folder name of the files for this Bible. This will be the (default) 
+		/// Gets the folder name of the files for this Bible. This will be the (default)
 		/// file path to load/store the bible from
 		/// </summary>
 		/// <param name="bible">BibleDescriptor object to load/store</param>

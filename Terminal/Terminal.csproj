@@ -19,7 +19,7 @@
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>3.0</Version>
+		<Version>3.1</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
@@ -33,10 +33,7 @@
 		<Summary>Terminal tool for Aionian</Summary>
 		<PackageReleaseNotes>
 
-- Done Option formatting
-- Removed a bug on `NextChapter()` and `PreviousChapter()` methods
-- Made the "Back to main menu" option in `ReadChapter()` into "Back to book select"
-- Added changes to Core app for to support `ChapterwiseBible` struct for better organization
+- Updated to newer AionianApp.Core package
 
 		</PackageReleaseNotes>
 		<Language>C#</Language>
