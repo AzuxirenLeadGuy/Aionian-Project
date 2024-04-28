@@ -7,19 +7,23 @@ namespace Testing_AionianLibrary;
 [TestClass]
 public class UnitTest1
 {
-	internal BibleLink Link = new("Aionian-Bible", "English", "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/Holy-Bible---English---Aionian-Bible---Standard-Edition.noia", false);
+	internal BibleLink Link = new(
+		"Aionian-Bible",
+		"English",
+		"https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/Holy-Bible---English---Aionian-Bible---Standard-Edition.noia",
+		false);
 	internal const int LinkCount = 214;
 	[TestMethod]
 	public void BibleLinkFetching()
 	{
-		(BibleLink Link, ulong SizeInBytes)[] x = BibleLink.GetAllUrlsFromWebsite();
+		Listing[] x = BibleLink.GetAllUrlsFromWebsite();
 		Assert.IsTrue(x.Length >= LinkCount);
 	}
 	[TestMethod]
 	public void BibleLinkDownloading()
 	{
-		var (desc, books) = Bible.ExtractBible(Link.DownloadStream());
-		SimpleBible englishBible = new(desc, books);
+		DownloadInfo data = Bible.ExtractBible(Link.DownloadStreamAsync().Result);
+		SimpleBible englishBible = new(data.Descriptor, data.Books);
 		Assert.AreEqual("In the beginning, God created the heavens and the earth.", englishBible[BibleBook.Genesis, 1, 1]);
 	}
 	[TestMethod]
@@ -33,10 +37,10 @@ public class UnitTest1
 	[TestMethod]
 	public void RegionalBookNameTest()
 	{
-		(BibleLink Link, ulong SizeInBytes)[] allLinks = BibleLink.GetAllUrlsFromWebsite();
+		Listing[] allLinks = BibleLink.GetAllUrlsFromWebsite();
 		BibleLink link = allLinks.First((x) => x.Link.Language == "Albanian-Tosk").Link;
-		var (desc, books) = Bible.ExtractBible(Link.DownloadStream());
-		SimpleBible bible = new(desc, books);
+		DownloadInfo info = Bible.ExtractBible(Link.DownloadStreamAsync().Result);
+		SimpleBible bible = new(info.Descriptor, info.Books);
 		Assert.AreEqual("1 i Samuelit", bible.Books[BibleBook.I_Samuel].RegionalBookName);
 	}
 }
