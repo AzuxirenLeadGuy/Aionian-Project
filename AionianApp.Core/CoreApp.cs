@@ -34,6 +34,10 @@ namespace AionianApp
 		/// </summary>
 		protected readonly List<BibleDescriptor> AvailableBibles = new();
 		/// <summary>
+		/// Returns a read-only collections of bibles available to read.
+		/// </summary>
+		public IEnumerable<BibleDescriptor> GetBibles() => AvailableBibles.ToArray();
+		/// <summary>
 		/// This is the folder path where the Application stores the downloaded files at
 		/// </summary>
 		/// <returns>(string) Path of the folder</returns>
@@ -149,7 +153,7 @@ namespace AionianApp
 		/// <param name="link">The link/ID of the bible to load.</param>
 		/// <returns>The `ChapterwiseBible` struct for this link</returns>
 		public ChapterwiseBible LoadChapterwiseBible(BibleDescriptor link) => new(
-			LoadFileAsJson<BibleDescriptor?>(AssetFileName(link)) ?? 
+			LoadFileAsJson<BibleDescriptor?>(AssetFileName(link)) ??
 				throw new ArgumentException($"Given link is invalid: {AssetDirName(link)}"),
 			AssetPath(AssetDirName(link)));
 		/// <summary>

@@ -27,58 +27,5 @@ namespace AionianApp
 			JsonSerializer.Deserialize<Book>(
 				File.ReadAllText(
 					GetBookPath(RootPath, book)));
-		/// <summary>The number of books in the loaded bible</summary>
-		public int BookCounts => Descriptor.RegionalName.Keys.Count;
-		/// <summary>
-		/// Returns the number of chapters in a given book of the loaded bible
-		/// </summary>
-		/// <param name="book">The book to check for the count of chapters</param>
-		/// <returns>The number of chapters in the given book of the loaded bible</returns>
-		public byte GetChapterCount(BibleBook book) =>
-			Descriptor.RegionalName.ContainsKey(book) ?
-				(byte)FetchBook(book).Chapter.Count :
-				throw new ArgumentException("Given key does not exist in this bible");
-		/// <summary>Returns the next chapter for a given book and chapter in the loaded bible</summary>
-		/// <param name="currentBook">The book currently at</param>
-		/// <param name="currentChapter">The chapter currently at</param>
-		/// <returns>Tuple of book and chapter that succeeds this current chapter</returns>
-		public (BibleBook BookEnum, byte Chapter) NextChapter(
-			BibleBook currentBook, 
-			byte currentChapter)
-		{
-			currentChapter++;
-			if (GetChapterCount(currentBook) < currentChapter)
-			{
-				currentChapter = 1;
-				BibleBook[] booklist = Descriptor.RegionalName.Keys.ToArray();
-				int idx = Array.IndexOf(booklist, currentBook);
-				currentBook = booklist[(idx + 1) % booklist.Length];
-			}
-			return (currentBook, currentChapter);
-		}
-		/// <summary>Returns the next chapter for a given book and chapter in the loaded bible</summary>
-		/// <param name="currentBook">The book currently at</param>
-		/// <param name="currentChapter">The chapter currently at</param>
-		/// <returns>Tuple of book and chapter that succeeds this current chapter</returns>
-		public (BibleBook BookEnum, byte Chapter) PreviousChapter(
-			BibleBook currentBook, 
-			byte currentChapter)
-		{
-			currentChapter--;
-			if (currentChapter == 0)
-			{
-				BibleBook[] booklist = Descriptor.RegionalName.Keys.ToArray();
-				int idx = Array.IndexOf(booklist, currentBook);
-				currentBook = booklist[(booklist.Length + idx - 1) % booklist.Length];
-				currentChapter = GetChapterCount(currentBook);
-			}
-			return (currentBook, currentChapter);
-		}
-		/// <summary> Returns a collection of verse for the given chapter. </summary>
-		/// <param name="book">BibleBook to load</param>
-		/// <param name="chapter">Selected chapter</param>
-		/// <returns>A dictionary of verses</returns>
-		public Dictionary<byte, string> LoadChapter(BibleBook book, byte chapter) => 
-			FetchBook(book).Chapter[chapter];
 	}
 }
