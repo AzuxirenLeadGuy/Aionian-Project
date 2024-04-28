@@ -221,7 +221,7 @@ public class CrossReferenceDatabase
 		BibleReference prevSource = new() { Book = BibleBook.NULL, Chapter = 0, Verse = 0 };
 		while (!stream.EndOfStream)
 		{
-			string[]? row = (stream.ReadLine()?.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) ?? throw new Exception("Stream format is incorrect!");
+			string[] row = (stream.ReadLine()?.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)) ?? throw new Exception("Stream format is incorrect!");
 			if (int.Parse(row[2]) >= treshold)
 			{
 				BibleReference currentSource = ParseReference(row[0]);

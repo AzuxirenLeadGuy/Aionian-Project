@@ -107,24 +107,6 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 		}
 	}
 	/// <summary>
-	/// This is an unofficial way to download the stream which can be further 
-	/// used to convert into the Bible Class object.
-	/// Needless to say, this is not the necessary way to download and should 
-	/// not be used if it does not meet any requiements of the developer.
-	/// </summary>
-	/// <returns>The stream of the *.noia file is returned</returns>
-	/// <example>
-	/// <code>
-	/// BibleLink link = ... // obtain a link
-	/// Bible downloadedBible = Bible.ExtractBible(link.DownloadStream()); //Convert the downloaded .noia file into a Bible
-	/// </code>
-	/// </example>
-	public StreamReader DownloadStream() =>
-		new(
-			new HttpClient().GetStreamAsync(
-				URL).Result);
-
-	/// <summary>
 	/// Preview method for downloading and keeping track of progress of download
 	/// </summary>
 	/// <param name="handler">The event called when the download progress is changed</param>
