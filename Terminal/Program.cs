@@ -64,7 +64,7 @@ namespace AionianApp.Terminal
 			Console.WriteLine("\nEnter the bible to load: ");
 			if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 			{
-				BibleReadingViewModel chapterwiseBible = new(this, AvailableBibles[--bible]);
+				AppViewModel chapterwiseBible = new(this, AvailableBibles[--bible]);
 				List<string> allBookNames = new();
 				BibleBook[] books_list = chapterwiseBible.AvailableBooks;
 				int maxlength = 0, sno = 0;
@@ -215,7 +215,10 @@ namespace AionianApp.Terminal
 									{
 										handler.HttpReceiveProgress += OnDownloadProgress;
 										progressBar.Write();
-										bool result = DownloadBibleAsync(link, handler).Result; //Bible.ExtractBible(link.DownloadStreamAsync(handler).Result);
+										bool result = ChapterwiseBible.DownloadBibleAsync(
+											this,
+											link,
+											handler).Result; //Bible.ExtractBible(link.DownloadStreamAsync(handler).Result);
 										if (!result) throw new Exception("Inner exception while downloading and storing");
 										files++;
 										Console.WriteLine("\nFile is saved successfully");
@@ -339,7 +342,9 @@ namespace AionianApp.Terminal
 				Console.WriteLine("\nEnter the bible to load: ");
 				if (int.TryParse(Console.ReadLine(), out int bible) && bible >= 1 && bible <= AvailableBibles.Count)
 				{
-					ChapterwiseBible Mybible = LoadChapterwiseBible(AvailableBibles[--bible]);
+					ChapterwiseBible Mybible = ChapterwiseBible.LoadChapterwiseBible(
+						this,
+						AvailableBibles[--bible]);
 					Console.WriteLine("Starting Search. Please wait...");
 					SearchMode mode = input == '1' ? SearchMode.MatchAnyWord : (input == '2' ? SearchMode.MatchAllWords : SearchMode.Regex);
 					SearchQuery search = new(inputline, mode);

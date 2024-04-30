@@ -15,4 +15,11 @@ public readonly record struct BibleDescriptor
 	public readonly Dictionary<BibleBook, string> RegionalName { init; get; }
 	/// <summary> String representation for this Bible </summary>
 	public override string ToString() => $"{Language} Bible: {Title}";
+	/// <summary> Null/0 Representation </summary>
+	public static BibleDescriptor Empty => new()
+	{
+		Title = "",
+		Language = "",
+		AionianEdition = false
+	};
 }
