@@ -12,4 +12,6 @@ public class SimpleBible : Bible
 	public SimpleBible(BibleDescriptor desc, Dictionary<BibleBook, Book> books) : base(desc) => Books = books;
 	/// <inheritdoc/>
 	public override Book FetchBook(BibleBook book) => Books[book];
+	/// <inheritdoc/>
+	public override IEnumerable<BibleBook> GetBooks() => Books.Keys;
 }

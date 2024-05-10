@@ -19,6 +19,8 @@ public abstract class Bible
 	public readonly BibleDescriptor Descriptor;
 	/// <summary> Initializes the bible </summary>
 	protected Bible(BibleDescriptor desc) => Descriptor = desc;
+	/// <summary>Enumeration of books within the bible</summary>
+	public virtual IEnumerable<BibleBook> GetBooks() => Descriptor.RegionalName.Keys;
 	/// <summary> Gets the books of this bible </summary>
 	public abstract Book FetchBook(BibleBook book);
 	/// <summary>

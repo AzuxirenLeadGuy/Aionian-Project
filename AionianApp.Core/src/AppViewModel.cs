@@ -1,6 +1,8 @@
 using Aionian;
+using AionianApp.ViewStates;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 namespace AionianApp;
 /// <summary>A viewmodel for the bible app</summary>
@@ -16,10 +18,10 @@ public class AppViewModel
 	protected KeyValuePair<BibleBook, string>[] _booksData;
 	/// <summary>The cached list of the bibles available to download</summary>
 	protected List<Listing> _downloadLinks;
-	/// <summary>The current bible chapter loaded (if any)</summary>
-	public byte CurrentChapter { get; protected set; }
-	/// <summary>The current chapterverses displayed(if any)</summary>
-	public Dictionary<byte, string> CurrentReading { get; protected set; }
+	/// <summary>The current state of the app</summary>
+	protected AppViewState _state;
+	/// <summary>The references that match the search parameters</summary>
+	protected ObservableCollection<BibleReference> _searchList;
 	/// <summary>Creates a viewmodel instance</summary>
 	/// <param name="app">The parent CoreApp that loads the configuration</param>
 	/// <param name="defaultLink">
@@ -30,7 +32,36 @@ public class AppViewModel
 		_downloadLinks = new();
 		RunningApp = app;
 		_booksData = Array.Empty<KeyValuePair<BibleBook, string>>();
-		CurrentReading = new();
+		_searchList = new();
+		_state = new()
+		{
+			ContentState = new()
+			{
+				AvailableLinks = _downloadLinks,
+				DownloadedBibles = AvailableBibles,
+				Progress = 0,
+				SelectedBible = null,
+				SelectedLink = null,
+			},
+			SearchState = new()
+			{
+				AvailableBibleNames = AvailableBibles.Select(x => x.Title),
+				SearchProgress = 0,
+				SearchText = "",
+				SelectedBible = "",
+				SelectedMode = SearchMode.MatchAnyWord,
+				FoundReferences = _searchList,
+			},
+			ReadState = new()
+			{
+				CurrentChapterContent = new(),
+				CurrentLoadedBible = "",
+				CurrentSelectedBook = 0,
+				CurrentSelectedChapter = 1,
+				LoadedBookNames = _booksData.Select(x => x.Value),
+				LoadedBibles = AvailableBibles.Select(x => x.Title),
+			},
+		};
 		if (defaultLink == null)
 			ResetReadingList();
 		else
@@ -42,7 +73,7 @@ public class AppViewModel
 	{
 		if (RunningApp.GetBibles().Any())
 			return SelectBible(RunningApp.GetBibles().FirstOrDefault());
-		CurrentReading.Clear();
+		_state.ReadState.CurrentChapterContent.Clear();
 		_booksData = Array.Empty<KeyValuePair<BibleBook, string>>();
 		_loadedPortion = new()
 		{
@@ -50,7 +81,7 @@ public class AppViewModel
 			Chapter = new(),
 			BookIndex = 0,
 		};
-		CurrentChapter = 0;
+		_state.ReadState.CurrentSelectedChapter = 0;
 		return false;
 	}
 	/// <summary>Operation to select a bible</summary>
@@ -90,8 +121,8 @@ public class AppViewModel
 			return false;
 		_loadedPortion = portion;
 		chapter = chapter > 0 ? chapter : (byte)_loadedPortion.Chapter.Count;
-		CurrentReading = _loadedPortion.Chapter[chapter];
-		CurrentChapter = chapter;
+		_state.ReadState.CurrentChapterContent = _loadedPortion.Chapter[chapter];
+		_state.ReadState.CurrentSelectedChapter = chapter;
 		return true;
 	}
 	/// <summary>Updates the reading portion with the next chapter of this bible</summary>
@@ -100,8 +131,8 @@ public class AppViewModel
 	{
 		if (_currentBible == null)
 			return false;
-		else if (CurrentChapter < AvailableChapters)
-			return LoadReading(CurrentBook, ++CurrentChapter);
+		else if (_state.ReadState.CurrentSelectedChapter < AvailableChapters)
+			return LoadReading(CurrentBook, ++_state.ReadState.CurrentSelectedChapter);
 		int idx = Array.FindIndex(
 			_booksData,
 			x => x.Key == CurrentBook);
@@ -115,8 +146,8 @@ public class AppViewModel
 	{
 		if (_currentBible == null)
 			return false;
-		else if (CurrentChapter > 1)
-			return LoadReading(CurrentBook, --CurrentChapter);
+		else if (_state.ReadState.CurrentSelectedChapter > 1)
+			return LoadReading(CurrentBook, --_state.ReadState.CurrentSelectedChapter);
 		int idx = Array.FindIndex(
 			_booksData,
 			x => x.Key == CurrentBook);
@@ -155,4 +186,6 @@ public class AppViewModel
 	public int BookCount => _booksData.Length;
 	/// <summary>The cached list of the bibles available to download</summary>
 	public IEnumerable<Listing> DownloadableLinks => _downloadLinks;
+	/// <summary>Gets the current state of the app</summary>
+	public AppViewState CurrentState => _state;
 }
