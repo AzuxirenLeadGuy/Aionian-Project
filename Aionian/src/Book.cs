@@ -7,6 +7,8 @@ public readonly record struct Book
 {
 	/// <summary> The Index of the book (Starts from 1) </summary>
 	public readonly byte BookIndex { get; init; }
+	/// <summary>The content within this book</summary>
+	public Dictionary<byte, string> this[byte index] => Chapter[index];
 	/// <summary> The collection of chapters in this book </summary>
 	public readonly Dictionary<byte, Dictionary<byte, string>> Chapter { get; init; }
 	/// <summary>The name of the book in the language of the region</summary>

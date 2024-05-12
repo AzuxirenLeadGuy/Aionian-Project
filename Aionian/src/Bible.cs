@@ -16,9 +16,7 @@ public readonly record struct DownloadInfo
 public abstract class Bible
 {
 	/// <summary> Describes the bible </summary>
-	public readonly BibleDescriptor Descriptor;
-	/// <summary> Initializes the bible </summary>
-	protected Bible(BibleDescriptor desc) => Descriptor = desc;
+	public BibleDescriptor Descriptor { get; init; }
 	/// <summary>Enumeration of books within the bible</summary>
 	public virtual IEnumerable<BibleBook> GetBooks() => Descriptor.RegionalName.Keys;
 	/// <summary> Gets the books of this bible </summary>
@@ -122,8 +120,11 @@ public abstract class Bible
 					CurrentChapterData[byte.Parse(rows[3])] = rows[4];
 					break;
 				case ReadProgress.EndStream:
-					if (inputType != InputType.EndOfFile) throw new InvalidDataException(
+					if (inputType != InputType.EndOfFile)
+					{
+						throw new InvalidDataException(
 						"Recived some data after EOF!");
+					}
 					break;
 			}
 		}

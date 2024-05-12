@@ -9,7 +9,12 @@ public class SimpleBible : Bible
 	/// <summary> Initializes a SimpleBible object </summary>
 	/// <param name="desc">The description of the bible</param>
 	/// <param name="books">The books of the bible</param>
-	public SimpleBible(BibleDescriptor desc, Dictionary<BibleBook, Book> books) : base(desc) => Books = books;
+	public SimpleBible(BibleDescriptor desc, Dictionary<BibleBook, Book> books)
+	{
+		Descriptor = desc;
+		Books = books;
+	}
+
 	/// <inheritdoc/>
 	public override Book FetchBook(BibleBook book) => Books[book];
 	/// <inheritdoc/>
