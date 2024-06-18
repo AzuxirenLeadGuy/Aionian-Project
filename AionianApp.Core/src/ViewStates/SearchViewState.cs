@@ -1,5 +1,4 @@
 using Aionian;
-using DynamicData.Binding;
 using System.Collections.Generic;
 
 namespace AionianApp.ViewStates;
@@ -17,9 +16,17 @@ public struct SearchViewState
 	/// <summary>The searchmode currently selected</summary>
 	public SearchMode SelectedMode { internal set; get; }
 	/// <summary>The list of bible names available</summary>
-	public IEnumerable<string> AvailableBibleNames { internal set; get; }
+	public IEnumerable<BibleDescriptor> AvailableBibles { internal set; get; }
 	/// <summary>The current element of Bible that is selected right now</summary>
-	public string SelectedBible { internal set; get; }
+	public BibleDescriptor SelectedBible { internal set; get; }
+	/// <summary>The books names (regional names) to search from</summary>
+	public IEnumerable<string> AvailableRanges { internal set; get; }
+	/// <summary>The id (in the list of `AvailableRanges`) to start the search from</summary>
+	public byte BookStart { internal set; get; }
+	/// <summary>The id (in the list of `AvailableRanges`) to end the search at</summary>
+	public byte BookEnd { internal set; get; }
+	/// <summary>Checks if the selected search range is valid</summary>
+	public readonly bool IsValid => BookStart <= BookEnd && SelectedBible != default;
 	/// <summary>Search Query object from current data</summary>
 	public readonly SearchQuery CurrentSearchQuery =>
 		new(SearchText, SelectedMode);

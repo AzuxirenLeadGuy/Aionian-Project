@@ -1,3 +1,4 @@
+using Aionian;
 using System.Collections.Generic;
 
 namespace AionianApp.ViewStates;
@@ -12,11 +13,11 @@ public struct ReadViewState
 	/// <summary>The list of books from the currently loaded bible</summary>
 	public IEnumerable<string> LoadedBookNames { internal set; get; }
 	/// <summary>The currently loaded book</summary>
-	public byte CurrentSelectedBook { internal set; get; }
+	public BibleBook CurrentSelectedBook { internal set; get; }
 	/// <summary>The list of bibles available in the app</summary>
 	public IEnumerable<string> LoadedBibles { internal set; get; }
 	/// <summary>The currently loaded bible name</summary>
-	public string CurrentLoadedBible { internal set; get; }
+	public BibleDescriptor CurrentLoadedBible { internal set; get; }
 	/// <summary>If true, bible content is loaded. Otherwise false</summary>
-	public readonly bool IsLoaded => CurrentLoadedBible.Length != 0;
+	public readonly bool IsLoaded => CurrentLoadedBible != BibleDescriptor.Empty;
 }

@@ -14,7 +14,7 @@ public readonly record struct BibleDescriptor
 	/// <summary> Regional names of the books of this Bible </summary>
 	public readonly Dictionary<BibleBook, string> RegionalName { init; get; }
 	/// <summary> String representation for this Bible </summary>
-	public override string ToString() => $"{Language} Bible: {Title}";
+	public override string ToString() => $"{Language} Bible : {Title}";
 	/// <summary> Null/0 Representation </summary>
 	public static BibleDescriptor Empty => new()
 	{

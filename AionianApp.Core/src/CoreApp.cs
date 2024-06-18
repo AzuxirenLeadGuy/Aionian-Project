@@ -80,7 +80,7 @@ public class CoreApp
 	/// </summary>
 	/// <param name="link">BibleLink object to load/download</param>
 	/// <returns>(string) Directory path of the bible asset</returns>
-	public string AssetDirName(BibleLink link) => AssetDirName(
+	protected virtual string AssetDirName(BibleLink link) => AssetDirName(
 		link.Title,
 		link.Language,
 		link.AionianEdition);
@@ -90,7 +90,7 @@ public class CoreApp
 	/// </summary>
 	/// <param name="bible">BibleDescriptor object to load/store</param>
 	/// <returns>(string) Directory path of the bible asset</returns>
-	public string AssetDirName(BibleDescriptor bible) => AssetDirName(
+	protected virtual string AssetDirName(BibleDescriptor bible) => AssetDirName(
 		bible.Title,
 		bible.Language,
 		bible.AionianEdition);
@@ -100,17 +100,15 @@ public class CoreApp
 	/// </summary>
 	/// <param name="bible">BibleDescriptor object to load/store</param>
 	/// <returns>(string) Directory path of the bible asset</returns>
-	public string AssetFileName(BibleDescriptor bible) =>
+	protected virtual string AssetFileName(BibleDescriptor bible) =>
 		$"{AssetDirName(bible)}/Root.dat";
 	/// <summary>Gets the name of the file storing this particular book of the bible</summary>
 	/// <param name="book">The book of the bible</param>
 	/// <param name="desc">The bible descrption</param>
 	/// <returns>(string) File path of the bible asset</returns>
-	public string AssetFileName(
+	protected virtual string AssetFileName(
 		BibleBook book,
-		BibleDescriptor desc) => ChapterwiseBible.GetBookPath(
-			AssetDirName(desc),
-			book);
+		BibleDescriptor desc) => $"{AssetDirName(desc)}/{(byte)book}.dat";
 	/// <summary>
 	/// Deletes everything in the AppDataFolderPath
 	/// </summary>
@@ -134,7 +132,7 @@ public class CoreApp
 	/// <param name="item">Object to serialize and store</param>
 	/// <param name="filename">File path to store the object</param>
 	/// <typeparam name="T">The Type of file to store</typeparam>
-	protected internal void SaveFileAsJson<T>(
+	protected internal virtual void SaveFileAsJson<T>(
 		T item,
 		string filename) => File.WriteAllText(
 			AssetPath(filename),
@@ -147,7 +145,7 @@ public class CoreApp
 	/// <param name="filename">File path of the file to deserialize and load object from</param>
 	/// <typeparam name="T">The type of file to load</typeparam>
 	/// <returns>(T) The file loaded from the asset file</returns>
-	protected internal T? LoadFileAsJson<T>(string filename) =>
+	protected internal virtual T? LoadFileAsJson<T>(string filename) =>
 		JsonSerializer.Deserialize<T>(
 			File.ReadAllText(
 				AssetPath(filename)),

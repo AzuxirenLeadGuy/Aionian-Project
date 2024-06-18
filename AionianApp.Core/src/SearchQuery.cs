@@ -17,6 +17,16 @@ public enum SearchMode : byte
 	/// <summary>Matches a verse using regex</summary>
 	Regex,
 }
+/// <summary>An abstraction for searching bible, and providing the range of book for a single search</summary>
+public struct BibleSearchRange
+{
+	/// <summary>The range of books to search within</summary>
+	public IEnumerable<BibleBook> SearchRange;
+	/// <summary>The number of books involved in the search</summary>
+	public int SearchBookCount;
+	/// <summary>The function to fetch the respective book</summary>
+	public Func<BibleBook, Book> Fetcher;
+}
 /// <summary>Prepares a Search operation for a given string</summary>
 public readonly struct SearchQuery
 {
@@ -121,7 +131,7 @@ public readonly struct SearchQuery
 	/// <param name="ct">The CancellationToken</param>
 	/// <returns>The enumeration of matching references</returns>
 	public IEnumerable<BibleReference> GetResults(
-		Bible searchBible,
+		BibleSearchRange searchBible,
 		bool ignoreCase = true,
 		IProgress<float>? onProgressUpdate = null,
 		ulong limit = 0,
@@ -131,10 +141,10 @@ public readonly struct SearchQuery
 		Regex r = new(
 			SearchString,
 			ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
-		float CurrentProgress = 0, ProgressInc = 1.0f / searchBible.Descriptor.RegionalName.Keys.Count;
-		foreach (BibleBook bk in searchBible.Descriptor.RegionalName.Keys)
+		float CurrentProgress = 0, ProgressInc = 1.0f / searchBible.SearchBookCount;
+		foreach (BibleBook bk in searchBible.SearchRange)
 		{
-			var bookvalue = searchBible.FetchBook(bk);
+			var bookvalue = searchBible.Fetcher(bk);
 			foreach (KeyValuePair<byte, Dictionary<byte, string>> ch in bookvalue.Chapter)
 			{
 				foreach (KeyValuePair<byte, string> v in ch.Value)
