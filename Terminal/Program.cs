@@ -1,17 +1,14 @@
 using Aionian;
+using AionianApp.ViewStates;
 using ConsoleTables;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Handlers;
-using System.Text.RegularExpressions;
 
 namespace AionianApp.Terminal;
-public class Program : CoreApp
+public class Program
 {
+	public static readonly AppViewModel<AppViewState> App = new();
 	public bool ExitPressed = false;
 	public static void Main() => new Program().Run();
 	private static void PrintSep()
@@ -20,19 +17,39 @@ public class Program : CoreApp
 		for (int i = 0; i < len; i++) Console.Write("=");
 	}
 	public static string RL() => Console.ReadLine() ?? throw new Exception("Expected non-null console input!");
+	public static string InputFor(string message)
+	{
+		Console.Write($"{message} :");
+		return RL();
+	}
+	public static string SimpleListChoice(string message, uint startId, params string[] options)
+	{
+		Console.WriteLine(message);
+		for (int i = 0; i < options.Length; i++)
+		{
+			Console.WriteLine($"{i + startId}. {options[i]}");
+		}
+		return RL();
+	}
+	private static void PrintError(string message)
+	{
+		Console.ForegroundColor = ConsoleColor.Red;
+		Console.WriteLine(message);
+		Console.ResetColor();
+	}
 	private void Run(/*string[] args*/)
 	{
 		Console.WriteLine("Welcome to the Aionian Bible.\nSoftware provided to you by Azuxiren\n\nPlease Wait while the assets are loaded");
 		//Init the Application
-		//Make AppDataFolder and AssetDataFile if it does not already exist
-		Console.WriteLine($"Asset path is {AssetMainFilePath}");
+		AppViewState _state = App.State;
+		Console.WriteLine($"Application initialized at {_state.RootDir}");
 		//Initialization Complete
-		if (AvailableBibles.Count == 0)
+		if (_state.AvailableBibles.Count == 0)
 		{
 			AssetManagement();
-			if (AvailableBibles.Count == 0)
+			if (_state.AvailableBibles.Count == 0)
 			{
-				Console.WriteLine("No Default Bible selected. Quitting Application");
+				PrintError("No Default Bible selected. Quitting Application");
 				return;
 			}
 		}
@@ -41,10 +58,14 @@ public class Program : CoreApp
 		while (!ExitPressed)
 		{
 			PrintSep();
-			Console.WriteLine();
-			Console.WriteLine("\n1. Bible Chapter Reading\n2. Bible verse search \n3. Download Bible Modules \n4. Exit");
-			Console.WriteLine("Enter Your Choice: ");
-			switch (RL()[0])
+			var input = SimpleListChoice(
+				"Enter program mode", 1,
+				"Bible Chapter Reading", // 1
+				"Search Bible References", // 2
+				"Download/Manage Bible Assets", // 3
+				"Exit" // 4
+			);
+			switch (input[0])
 			{
 				case '1': ChapterDisplay(); break;
 				case '2': WordSearcher(); break;
@@ -55,24 +76,26 @@ public class Program : CoreApp
 		}
 		Console.WriteLine("Thank you for using Aionian-Terminal, brought to you by AzuxirenLeadGuy");
 	}
-	private void ChapterDisplay()
+	private static void ChapterDisplay()
 	{
+		AppViewState _state = App.State;
 		Console.WriteLine("Loading Available Bibles. Please Wait...");
 		DisplayAvailableBibles();
 		Console.WriteLine("\nEnter the bible to load: ");
-		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > AvailableBibles.Count)
+		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > _state.AvailableBibles.Count)
 		{
 			PrintError("Invalid Input recieved!");
 			return;
 		}
-		AppViewModel chapterwiseBible = new(this, AvailableBibles[--bible]);
+		App.LoadBibleChapter(_state.AvailableBibles[--bible]);
+		_state = App.State;
 		List<string> allBookNames = new();
-		BibleBook[] books_list = chapterwiseBible.AvailableBooks;
+		(BibleBook BookVal, string Name)[] books_list = _state.CurrentlyLoadedBookNames.ToArray();
 		int maxlength = 0, sno = 0;
-		foreach (var bkpair in chapterwiseBible.AvailableBookNames)
+		foreach ((BibleBook _, string name) in books_list)
 		{
 			++sno;
-			string str = $"{sno}. {bkpair}";
+			string str = $"{sno}. {name}";
 			allBookNames.Add(str);
 			maxlength = maxlength > str.Length + 2 ? maxlength : str.Length + 2;
 		}
@@ -95,32 +118,34 @@ public class Program : CoreApp
 				Console.WriteLine();
 			}
 		}
-		Console.WriteLine("Enter ID of the Book to read: ");
-		if (!byte.TryParse(Console.ReadLine(), out byte bookid) || bookid < 1 || bookid > chapterwiseBible.BookCount)
+		if (!byte.TryParse(
+			InputFor("Enter ID of the Book to read "),
+			out byte bookid) || bookid < 1 || bookid > books_list.Length)
 		{
 			PrintError("Invalid ID");
 			return;
 		}
 		byte currentChapter;
-		BibleBook currentBook = books_list[bookid - 1];
-		chapterwiseBible.LoadReading(currentBook);
-		int len = chapterwiseBible.AvailableChapters;
-		if (len == 1)
-		{
-			currentChapter = 1;
-		}
+		BibleBook currentBook = books_list[bookid - 1].BookVal;
+		BibleDescriptor desc = _state.AvailableBibles[bible];
+		App.LoadBibleChapter(desc, currentBook);
+		int len = App.State.ReadState.CurrentBookChapterCount;
+		if (len == 1) { currentChapter = 1; }
 		else
 		{
 			while (
-				!byte.TryParse(Console.ReadLine(), out currentChapter)
+				!byte.TryParse(InputFor($"This book has {len} chapters. Enter the chapter to load"), out currentChapter)
 				|| currentChapter == 0
 				|| currentChapter > len)
 			{
 				PrintError("Invalid Chapter! Try again...");
 			}
 		}
-	sr: chapterwiseBible.LoadReading(currentBook, currentChapter);
-		Dictionary<byte, string> chap = chapterwiseBible.CurrentReading;
+	sr: bool fetching = App.LoadBibleChapter(desc, currentBook, currentChapter);
+		if (!fetching) { PrintError("Could not fetch resources!"); return; }
+		_state = App.State;
+		currentChapter = _state.ReadState.CurrentSelectedChapter;
+		Dictionary<byte, string> chap = _state.ReadState.CurrentChapterContent;
 		DisplayChapter(
 			chap,
 			Enum.GetName(
@@ -137,15 +162,25 @@ public class Program : CoreApp
 					goto bk;
 				case 4:
 					return;
-				case 1:
-					chapterwiseBible.NextChapter();
-					currentBook = chapterwiseBible.CurrentBook;
-					currentChapter = chapterwiseBible.CurrentChapter;
+				case 1: // Next chapter
+					if (currentChapter >= _state.ReadState.CurrentBookChapterCount)
+					{
+						currentChapter = 0;
+						int idx = Array.FindIndex(books_list, x => x.BookVal == currentBook) + 1;
+						if (idx >= books_list.Length) { idx = 0; }
+						currentBook = books_list[idx].BookVal;
+					}
+					else { currentChapter++; }
 					goto sr;
-				case 2:
-					chapterwiseBible.PrevChapter();
-					currentBook = chapterwiseBible.CurrentBook;
-					currentChapter = chapterwiseBible.CurrentChapter;
+				case 2: // Previous chapter
+					if (currentChapter <= 1)
+					{
+						currentChapter = 255;
+						int idx = Array.FindIndex(books_list, x => x.BookVal == currentBook) - 1;
+						if (idx < 0) { idx = books_list.Length - 1; }
+						currentBook = books_list[idx].BookVal;
+					}
+					else { currentChapter--; }
 					goto sr;
 				default:
 					PrintError("Invalid Input entered");
@@ -157,7 +192,7 @@ public class Program : CoreApp
 		{
 			int choice = 1;
 			ConsoleTable table = new("ID", "Title", "Language", "Version");
-			foreach (BibleDescriptor link in AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
+			foreach (BibleDescriptor link in _state.AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 			table.Write();
 		}
 		void DisplayChapter(Dictionary<byte, string> chapter, string shortbookname, byte chapterno)
@@ -169,37 +204,27 @@ public class Program : CoreApp
 			}
 		}
 	}
-	private static void PrintError(string message)
-	{
-		Console.ForegroundColor = ConsoleColor.Red;
-		Console.WriteLine(message);
-		Console.ResetColor();
-	}
 	public void AssetManagement()
 	{
-		if (AvailableBibles.Count == 0)
-		{
-			Console.WriteLine("This program requires at least one bible to be installed. Please Install at least once");
-		}
+		AppViewState _state = App.State;
+		if (_state.AvailableBibles.Count == 0) { PrintError("This program requires at least one bible to be installed. Please Install at least once"); }
 		else
 		{
 			Console.WriteLine("Displaying Installed bibles: ");
 			DisplayAvailableBibles();
 		}
-		Console.WriteLine("\n1. Add a Bible\n2. Remove a Bible\n3. Remove All Bibles and Data\nPress any other key to go back to main menu\nEnter your choice : ");
-		switch (RL()[0])
+		switch (SimpleListChoice(
+			"Enter your choice", 1,
+			"Add a bible",
+			"Remove a bible",
+			"Remove all Bibles and their respective data")[0])
 		{
 			case '1':
 				Console.WriteLine("Fetching data from server. Please wait...");
 				BibleLink[]? list = null;
 				int files;
-				try { list = DisplayDownloadable(); }
-				catch (Exception e) { Console.WriteLine(e.Message); }
-				if (list == null || list.Length == 0)
-				{
-					Console.WriteLine("Could not connect to the server... ");
-					break;
-				}
+				try { list = DisplayDownloadable(); } catch (Exception e) { Console.WriteLine(e.Message); }
+				if (list == null || list.Length == 0) { PrintError("Could not connect to the server... "); break; }
 				Console.WriteLine("Enter the ID(s) of the bible to download (Multiple IDs are to be separted by space");
 				files = 0;
 				foreach (string Id in RL().Split(' ', StringSplitOptions.RemoveEmptyEntries))
@@ -210,60 +235,50 @@ public class Program : CoreApp
 						continue;
 					}
 					BibleLink link = list[--x];
-					if (CheckExists(link))
+					if (_state.AvailableBibles.Any(x => x.Equals(link)))
 					{
-						Console.WriteLine($"File {AssetDirName(link)} already exists");
+						Console.WriteLine($"Bible {link} already exists");
 						continue;
 					}
-					Console.WriteLine($"Downloading file: {AssetDirName(link)}");
+					Console.WriteLine($"Downloading file: {link}");
 					ConsoleProgressBar progressBar = new((byte)(Console.WindowWidth / 2));
-					ProgressMessageHandler handler = new(new HttpClientHandler() { AllowAutoRedirect = true });
 					try
 					{
-						handler.HttpReceiveProgress += OnDownloadProgress;
 						progressBar.Write();
-						bool result = ChapterwiseBible.DownloadBibleAsync(
-							this,
-							link,
-							handler).Result; //Bible.ExtractBible(link.DownloadStreamAsync(handler).Result);
-						if (!result) throw new Exception("Inner exception while downloading and storing");
+						Exception? exp = App.DownloadBibleAsync(link, progressBar).Result;
+						if (exp != null) throw exp;
 						files++;
+						_state = App.State;
 						Console.WriteLine("\nFile is saved successfully");
 					}
 					catch (Exception e)
 					{
+						Console.WriteLine();
 						Console.WriteLine(e.Message);
+						Console.WriteLine(e.StackTrace);
 						Console.WriteLine("\n\nUnexpected Error");
-					}
-					void OnDownloadProgress(object? o, HttpProgressEventArgs e)
-					{
-						progressBar.Percentage = (byte)e.ProgressPercentage;
-						progressBar.Write();
-						if (progressBar.Percentage == 100)
-							Console.WriteLine("\nFile Download Complete.");
 					}
 				}
 				Console.WriteLine($"Downloaded {files} file(s) Successfully");
 				break;
 			case '2':
-				Console.WriteLine("Enter the ID(s) of the bible to remove (Multiple IDs are to be separted by space");
 				files = 0;
-				foreach (string Id in RL().Split(' ', StringSplitOptions.RemoveEmptyEntries))
+				foreach (string Id in InputFor(
+					"Enter the ID(s) of the bible to remove (Multiple IDs are to be separted by space")
+					.Split(' ', StringSplitOptions.RemoveEmptyEntries))
 				{
-					if (!int.TryParse(Id, out int x) || x < 1 || x > AvailableBibles.Count)
+					if (!int.TryParse(Id, out int x) || x < 1 || x > _state.AvailableBibles.Count)
 					{
 						Console.WriteLine($"Ignoring Invalid input {Id}");
 						break;
 					}
-					BibleDescriptor link = AvailableBibles[--x];
-					try
+					BibleDescriptor link = _state.AvailableBibles[--x];
+					if (App.DeleteBible(link))
 					{
-						File.Delete(AssetPath(AssetDirName(link)));
 						files++;
-						Console.WriteLine($"Removed {AssetDirName(link)}");
-						_ = AvailableBibles.Remove(link);
+						Console.WriteLine($"Removed {link}");
 					}
-					catch (Exception e) { Console.WriteLine(e.Message); }
+					else { PrintError($"Could not remove {link}"); }
 				}
 				Console.WriteLine($"Removed {files} file(s) Successfully");
 				break;
@@ -275,31 +290,32 @@ public class Program : CoreApp
 					Console.WriteLine("Delete process skipped.");
 					break;
 				}
-				DeleteAllAssets();
+				App.DeleteAllData();
 				Console.WriteLine("All assets removed");
 				ExitPressed = true;
 
 				break;
 			default: Console.WriteLine("Returning to main menu"); break;
 		}
-		if (!ExitPressed) SaveAssetLog();
 		void DisplayAvailableBibles()
 		{
 			int choice = 1;
-			ConsoleTable table = new("ID", "Title", "Language", "Version", "Location");
-			foreach (BibleDescriptor link in AvailableBibles)
-				_ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard", AssetPath(AssetDirName(link)));
+			ConsoleTable table = new("ID", "Title", "Language", "Version");
+			foreach (BibleDescriptor link in _state.AvailableBibles)
+				_ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 			table.Write();
 		}
 		BibleLink[] DisplayDownloadable()
 		{
-			Listing[] results = BibleLink.GetAllUrlsFromWebsite();
+			var exp = App.RefreshDownloadLinks();
+			if (exp != null) { throw exp; }
+			_state = App.State;
+			Listing[] results = _state.ContentState.AvailableLinks.ToArray();
 			ConsoleTable table = new("ID", "Title", "Language", "Size", "|", "ID", "Title", "Language", "Size");
 			for (int i = 0; i < results.Length; i += 2)
 			{
 				BibleLink link = results[i].Link;
 				BibleLink lin2 = results[i + 1].Link;
-				Debug.WriteLine($"link={AssetDirName(link)}; lin2={AssetDirName(lin2)};\n{link.Equals(lin2)} : {link.CompareTo(lin2)}\n\n");
 				_ = table.AddRow(i + 1, link.Title, link.Language, $"{results[i].Bytes / 1048576.0f:0.000} MB", "|", i + 2, lin2.Title, lin2.Language, $"{results[i + 1].Bytes / 1048576.0f:0.000} MB");
 			}
 			table.Options.EnableCount = false;
@@ -309,48 +325,42 @@ public class Program : CoreApp
 			return links.ToArray();
 		}
 	}
-	private void WordSearcher()
+	private static void WordSearcher()
 	{
-		Console.WriteLine("1. Search for Any of the words\n2. Search for All of the words\n3. Regex (Regular Expression)\n Press any other key to return\nEnter your choice: ");
-		char input = RL()[0];
+		Console.WriteLine("\nEnter the bible to perform search on: ");
+		AppViewState _state = App.State;
+		DisplayAvailableBibles(_state.AvailableBibles);
+		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > _state.AvailableBibles.Count)
+		{
+			Console.WriteLine("Invalid input. Aborting process..");
+			return;
+		}
+		string inputline = InputFor("Enter words(s)").Trim();
+		if (inputline.Length == 0) { Console.WriteLine("No input recieved"); return; }
+		char input = SimpleListChoice(
+			"Enter your choice", 1,
+			"Search for any of the words.",
+			"Search for All of the words",
+			"Regex")[0];
 		if (input != '1' && input != '2' && input != '3')
 		{
 			Console.WriteLine("Returning to main menu");
 			return;
 		}
-		Console.WriteLine("Enter words(s) :");
-		string inputline = RL().Trim();
-		if (inputline.Length == 0)
-		{
-			Console.WriteLine("No input recieved");
-			return;
-		}
-		else if (Regex.Match(inputline, "[.,\\/#!$%\\^&\\*;:{}=\\-_`~()+='\"<>?/|%]").Success && (input == '1' || input == '2'))
-		{
-			Console.WriteLine("Cannot use punctutations for word search. Please use Regex search for that");
-			return;
-		}
-		else if (inputline.Count(x => x == ' ') >= 5 && input == '2')
-		{
-			Console.WriteLine("Option 'Search for All of the words' is not available for more than 5 words.");
-			return;
-		}
-		DisplayAvailableBibles(AvailableBibles);
-		Console.WriteLine("\nEnter the bible to load: ");
-		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > AvailableBibles.Count)
-		{
-			Console.WriteLine("Invalid input. Aborting process..");
-			return;
-		}
-		ChapterwiseBible Mybible = ChapterwiseBible.LoadChapterwiseBible(
-			this,
-			AvailableBibles[--bible]);
-		Console.WriteLine("Starting Search. Please wait...");
 		SearchMode mode = input == '1' ? SearchMode.MatchAnyWord : (input == '2' ? SearchMode.MatchAllWords : SearchMode.Regex);
-		SearchQuery search = new(inputline, mode);
-		foreach (BibleReference result in search.GetResults(Mybible))
+		SearchQuery search;
+		try { search = new(inputline, mode); } catch (Exception ex) { PrintError($"Invalid input.\n{ex}"); return; }
+		BibleDescriptor desc = _state.AvailableBibles[--bible];
+		App.LoadBibleChapter(desc);
+		Console.WriteLine("Starting Search. Please wait...");
+		if (!App.SearchVerses(desc, search, BibleBook.NULL, BibleBook.NULL))
 		{
-			PrintVerse(result.Book, result.Verse, result.Chapter, Mybible[result]);
+			PrintError("Currently unable to request search");
+			return;
+		}
+		foreach ((BibleReference result, string verse) in App.State.SearchState.FoundReferences)
+		{
+			PrintVerse(result.Book, result.Verse, result.Chapter, verse);
 		}
 	}
 	private static void DisplayAvailableBibles(IEnumerable<BibleDescriptor> bibles)
@@ -382,7 +392,7 @@ public enum ProgressFormat : byte
 	PercOnly = 2,
 	RevolverOnly = 4
 }
-public struct ConsoleProgressBar
+public struct ConsoleProgressBar : IProgress<float>
 {
 	public static readonly char block = '■';
 	private readonly bool _fixedLength;
@@ -446,5 +456,10 @@ public struct ConsoleProgressBar
 		if ((format & ProgressFormat.BarOnly) != 0) UpdateBar();
 		if ((format & ProgressFormat.PercOnly) != 0) UpdatePerc();
 		if ((format & ProgressFormat.RevolverOnly) != 0) UpdateRevolver();
+	}
+	public void Report(float value)
+	{
+		_perc = (byte)value;
+		Write();
 	}
 }
