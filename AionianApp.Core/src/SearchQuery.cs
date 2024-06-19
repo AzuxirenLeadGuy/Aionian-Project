@@ -130,7 +130,7 @@ public readonly struct SearchQuery
 	/// <param name="limit">After this many matched results, the later matchings will be skipped</param>
 	/// <param name="ct">The CancellationToken</param>
 	/// <returns>The enumeration of matching references</returns>
-	public IEnumerable<BibleReference> GetResults(
+	public IEnumerable<(BibleReference verse, string content)> GetResults(
 		BibleSearchRange searchBible,
 		bool ignoreCase = true,
 		IProgress<float>? onProgressUpdate = null,
@@ -157,12 +157,12 @@ public readonly struct SearchQuery
 					}
 					else if (r.Match(v.Value).Success)
 					{
-						yield return new BibleReference()
+						yield return (new BibleReference()
 						{
 							Book = bk,
 							Chapter = ch.Key,
 							Verse = v.Key
-						};
+						}, v.Value);
 						if (limit > 0) { limit_passed = (--limit) == 0; }
 					}
 				}
