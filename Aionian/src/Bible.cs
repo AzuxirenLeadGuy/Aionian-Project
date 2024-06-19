@@ -87,7 +87,7 @@ public abstract class Bible
 					}
 
 				case ReadProgress.VerseRead:
-					if (inputType == InputType.BookStartComment)
+					if (inputType == InputType.BookStartComment || inputType == InputType.EndOfFile)
 					{
 						CurrentBookData[CurrentChapter] = CurrentChapterData;
 						books[CurrentBook] = new()
@@ -96,19 +96,22 @@ public abstract class Bible
 							Chapter = CurrentBookData,
 							RegionalBookName = RegionalName[CurrentBook],
 						};
-						RegionalName.Add(
-							CurrentBook = (BibleBook)byte.Parse(rows[1]),
-							rows[4]);
-						CurrentBookData = new();
-						CurrentChapterData = new();
-						CurrentChapter = 1;
-						mode = ReadProgress.BookStart;
-						break;
-					}
-					else if (inputType == InputType.EndOfFile)
-					{
-						mode = ReadProgress.EndStream;
-						goto case ReadProgress.EndStream;
+						if (inputType == InputType.EndOfFile)
+						{
+							mode = ReadProgress.EndStream;
+							goto case ReadProgress.EndStream;
+						}
+						else
+						{
+							RegionalName.Add(
+								CurrentBook = (BibleBook)byte.Parse(rows[1]),
+								rows[4]);
+							CurrentBookData = new();
+							CurrentChapterData = new();
+							CurrentChapter = 1;
+							mode = ReadProgress.BookStart;
+							break;
+						}
 					}
 					else if (inputType == InputType.Comments) { break; }
 					else if ((chap = byte.Parse(rows[2])) != CurrentChapter)
@@ -134,7 +137,7 @@ public abstract class Bible
 				: line.StartsWith("# BOOK") ? InputType.BookStartComment
 				: InputType.Comments;
 			process(
-				line.Split(
+				rows: line.Split(
 				new char[] { '\t' },
 				StringSplitOptions.RemoveEmptyEntries));
 		}

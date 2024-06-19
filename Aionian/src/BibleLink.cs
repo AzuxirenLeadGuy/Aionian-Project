@@ -57,11 +57,11 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 	public override string ToString() => $"{Language}|{Title}";
 	/// <summary> The default URL for downloading the assets </summary>
 	public const string default_url = "https://raw.githubusercontent.com/AzuxirenLeadGuy/AionianBible_DataFileStandard/master/";
-	/// <summary>
-	/// Returns a touple of all links available for download. Needless to say, this function requres internet
-	/// </summary>
+	/// <summary> /// Returns a touple of all links available for download. Needless to say, this function requres internet</summary>
+	/// <param name="resourceSite">The site to download the resources from</param>
+	/// <param name="quiet_return">If true, any exception thrown in the process is caught, and an empty list is returned instead</param>
 	/// <returns>Returs an array of every link avaialble to download in the Aionian</returns>
-	public static Listing[] GetAllUrlsFromWebsite(string resourceSite = default_url)
+	public static Listing[] GetAllUrlsFromWebsite(string resourceSite = default_url, bool quiet_return = true)
 	{
 		List<Listing> links = new();
 		string base_url = resourceSite + "Content.txt";
@@ -101,10 +101,7 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 			}
 			return links.ToArray();
 		}
-		catch
-		{
-			return Array.Empty<Listing>();
-		}
+		catch when (quiet_return) { return Array.Empty<Listing>(); }
 	}
 	/// <summary>
 	/// Preview method for downloading and keeping track of progress of download

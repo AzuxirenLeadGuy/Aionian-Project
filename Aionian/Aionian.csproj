@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <PackageId>Azuxiren.Aionian</PackageId>
-    <Version>3.0.1</Version>
+    <Version>4.0</Version>
     <Authors>AzuxirenLeadGuy</Authors>
     <Company>Azuxiren</Company>
     <RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
@@ -26,13 +26,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="icon.png" Pack="true" PackagePath="." />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="BibleBook.cs" />
-    <Content Include="Bible.cs" />
-    <Content Include="BibleLink.cs" />
-    <Content Include="Book.cs" />
-    <Content Include="CrossReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="cross_references\cross_references.txt" />
