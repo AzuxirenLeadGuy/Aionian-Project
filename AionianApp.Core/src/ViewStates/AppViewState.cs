@@ -31,12 +31,11 @@ public class AppViewState
 		ContentState = new()
 		{
 			AvailableLinks = Array.Empty<Listing>(),
-			Progress = 0,
+			LastRefreshed = DateTime.MinValue,
 		};
 		SearchState = new()
 		{
-			SearchProgress = 0,
-			FoundReferences = Array.Empty<(BibleReference, string)>(),
+			FoundReferences = Array.Empty<SearchedVerse>(),
 		};
 		ReadState = new()
 		{

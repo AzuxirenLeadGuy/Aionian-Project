@@ -358,9 +358,13 @@ public class Program
 			PrintError("Currently unable to request search");
 			return;
 		}
-		foreach ((BibleReference result, string verse) in App.State.SearchState.FoundReferences)
+		foreach (SearchedVerse result in App.State.SearchState.FoundReferences)
 		{
-			PrintVerse(result.Book, result.Verse, result.Chapter, verse);
+			PrintVerse(
+				result.Reference.Book,
+				result.Reference.Chapter,
+				result.Reference.Verse, 
+				result.VerseContent);
 		}
 	}
 	private static void DisplayAvailableBibles(IEnumerable<BibleDescriptor> bibles)

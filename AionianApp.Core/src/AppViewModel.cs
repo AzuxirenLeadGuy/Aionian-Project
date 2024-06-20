@@ -27,7 +27,7 @@ where AppState : AppViewState, new()
 	/// <summary>The path of the config file</summary>
 	protected string ConfigFile => $"{_configDir}/config.json";
 	/// <summary>The references that match the search parameters</summary>
-	protected readonly List<(BibleReference, string)> _searchList = new();
+	protected readonly List<SearchedVerse> _searchList = new();
 	/// <summary>The cached list of the bibles available to download</summary>
 	protected readonly List<Listing> _downloadLinks = new();
 	/// <summary>The bibles available to the app</summary>
@@ -43,7 +43,7 @@ where AppState : AppViewState, new()
 			if (File.Exists(path))
 				throw new ArgumentException("Expected path of root directory, and not the file!", nameof(path));
 			else
-				Directory.CreateDirectory(path);
+				_ = Directory.CreateDirectory(path);
 		}
 		_configDir = path;
 		if (File.Exists(ConfigFile))
@@ -234,7 +234,11 @@ where AppState : AppViewState, new()
 				{
 					value = _cache.value = LoadBook(bible, book);
 					_cache.book = book;
-					if (bible != _cache.bible) { _cache.bible = _state.CurrentLoadedBible = bible; }
+					if (bible != _cache.bible)
+					{
+						_cache.bible = _state.CurrentLoadedBible = bible;
+						_searchList.Clear();
+					}
 				}
 				if (chapter == 0) chapter = 1;
 				else if (chapter > value.Chapter.Count) chapter = (byte)value.Chapter.Count;
@@ -259,6 +263,7 @@ where AppState : AppViewState, new()
 			_downloadLinks.Clear();
 			_downloadLinks.AddRange(
 				BibleLink.GetAllUrlsFromWebsite(quiet_return: false));
+			_state.ContentState.LastRefreshed = DateTime.Now;
 		}
 		catch (Exception ex) { exp = ex; }
 		return exp;

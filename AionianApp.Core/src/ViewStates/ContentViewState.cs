@@ -1,4 +1,5 @@
 using Aionian;
+using System;
 using System.Collections.Generic;
 
 namespace AionianApp.ViewStates;
@@ -7,8 +8,6 @@ public struct ContentViewState
 {
 	/// <summary>The links available to download</summary>
 	public IEnumerable<Listing> AvailableLinks { internal set; get; }
-	/// <summary>The Download progress in percent (out of 100). When not downloading, value is 0</summary>
-	public float Progress { internal set; get; }
-	/// <summary>Returns true if download is ongoing, otherwise false</summary>
-	public readonly bool IsDownloading => Progress > 0;
+	/// <summary>If true, the download link is loaded</summary>
+	public DateTime LastRefreshed { internal set; get; }
 }

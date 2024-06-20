@@ -17,7 +17,7 @@
 		<PackageId>Azuxiren.Aionian.Terminal</PackageId>
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>aionian-terminal</ToolCommandName>
-		<Version>4.0</Version>
+		<Version>4.0.0.1</Version>
 		<Authors>AzuxirenLeadGuy</Authors>
 		<Company>Azuxiren</Company>
 		<RepositoryUrl>https://github.com/AzuxirenLeadGuy/Aionian-Project</RepositoryUrl>
@@ -30,9 +30,8 @@
 		<Title>Aionian Bible Terminal</Title>
 		<Summary>Terminal tool for Aionian</Summary>
 		<PackageReleaseNotes>
-
 - Updated to newer AionianApp.Core package
-
+- Better error handling and formatting
 		</PackageReleaseNotes>
 		<Language>C#</Language>
 		<RepositoryType>git</RepositoryType>

@@ -27,6 +27,14 @@ public struct BibleSearchRange
 	/// <summary>The function to fetch the respective book</summary>
 	public Func<BibleBook, Book> Fetcher;
 }
+/// <summary>The results for every searched hit</summary>
+public readonly struct SearchedVerse
+{
+	/// <summary>The content of this verse</summary>
+	public readonly string VerseContent { get; init; }
+	/// <summary>The location of this verse</summary>
+	public readonly BibleReference Reference { get; init; }
+}
 /// <summary>Prepares a Search operation for a given string</summary>
 public readonly struct SearchQuery
 {
@@ -130,7 +138,7 @@ public readonly struct SearchQuery
 	/// <param name="limit">After this many matched results, the later matchings will be skipped</param>
 	/// <param name="ct">The CancellationToken</param>
 	/// <returns>The enumeration of matching references</returns>
-	public IEnumerable<(BibleReference verse, string content)> GetResults(
+	public IEnumerable<SearchedVerse> GetResults(
 		BibleSearchRange searchBible,
 		bool ignoreCase = true,
 		IProgress<float>? onProgressUpdate = null,
@@ -157,12 +165,16 @@ public readonly struct SearchQuery
 					}
 					else if (r.Match(v.Value).Success)
 					{
-						yield return (new BibleReference()
+						yield return new()
 						{
-							Book = bk,
-							Chapter = ch.Key,
-							Verse = v.Key
-						}, v.Value);
+							Reference = new()
+							{
+								Book = bk,
+								Chapter = ch.Key,
+								Verse = v.Key
+							},
+							VerseContent = v.Value,
+						};
 						if (limit > 0) { limit_passed = (--limit) == 0; }
 					}
 				}
