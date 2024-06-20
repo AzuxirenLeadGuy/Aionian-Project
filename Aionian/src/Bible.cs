@@ -101,17 +101,14 @@ public abstract class Bible
 							mode = ReadProgress.EndStream;
 							goto case ReadProgress.EndStream;
 						}
-						else
-						{
-							RegionalName.Add(
-								CurrentBook = (BibleBook)byte.Parse(rows[1]),
-								rows[4]);
-							CurrentBookData = new();
-							CurrentChapterData = new();
-							CurrentChapter = 1;
-							mode = ReadProgress.BookStart;
-							break;
-						}
+						RegionalName.Add(
+							CurrentBook = (BibleBook)byte.Parse(rows[1]),
+							rows[4]);
+						CurrentBookData = new();
+						CurrentChapterData = new();
+						CurrentChapter = 1;
+						mode = ReadProgress.BookStart;
+						break;
 					}
 					else if (inputType == InputType.Comments) { break; }
 					else if ((chap = byte.Parse(rows[2])) != CurrentChapter)

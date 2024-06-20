@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace AionianApp;
 
 /// <summary>The functionalities that an AionianApp ViewModel should provide</summary>
-public class AppViewModel<AppState>
+public class AppViewModel<AppState> : IViewModel<AppState>
 where AppState : AppViewState, new()
 {
 	/// <summary>Fetches the data to populate the view</summary>
@@ -34,6 +34,8 @@ where AppState : AppViewState, new()
 	protected List<BibleDescriptor> _offlineBibles = new();
 	/// <summary>The cache to load the chapterwise data from</summary>
 	protected (BibleDescriptor bible, BibleBook book, Book value) _cache;
+	/// <inheritdoc/>
+	public event EventHandler<AppState>? OnUpdate;
 	/// <summary>Loads the App from the content data in the Config directory</summary>
 	/// <param name="path">The path of the config directory</param>
 	public AppViewModel(string path)
@@ -60,18 +62,20 @@ where AppState : AppViewState, new()
 		_state.ContentState.AvailableLinks = _downloadLinks;
 		_state.SearchState.FoundReferences = _searchList;
 		_state.RootDir = _configDir;
+		_state.CurrentAppState = AppViewState.State.Initialized;
+		OnUpdate?.Invoke(this, _state);
 	}
 	/// <summary>Loads the App from the content data in the Config directory taken as the Local Application Data folder</summary>
 	public AppViewModel() : this(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AionianAppData")) { }
 	/// <summary>The path of the directory where the contents of the book is stored</summary>
 	/// <param name="desc">The descriptor of the bible</param>
 	/// <returns>The path of the resource</returns>
-	protected string BibleDirectoryPath(BibleDescriptor desc) => $"{_configDir}/{desc.ToString().Replace(' ', '_')}";
+	protected virtual string BibleDirectoryPath(BibleDescriptor desc) => $"{_configDir}/{desc.ToString().Replace(' ', '_')}";
 	/// <summary>The path of the file where the contents of the book is stored</summary>
 	/// <param name="desc">The descriptor of the bible</param>
 	/// <param name="book">The book value to load</param>
 	/// <returns>The path of the resource</returns>
-	protected string BibleBookPath(BibleDescriptor desc, BibleBook book) => $"{BibleDirectoryPath(desc)}/{(byte)book}.json";
+	protected virtual string BibleBookPath(BibleDescriptor desc, BibleBook book) => $"{BibleDirectoryPath(desc)}/{(byte)book}.json";
 	private static JsonSerializerOptions DefaultOptions() => new()
 	{
 		AllowTrailingCommas = true,
@@ -89,8 +93,8 @@ where AppState : AppViewState, new()
 			));
 		_state.AvailableBibles.Clear();
 		_state.AvailableBibles.AddRange(_offlineBibles);
+		OnUpdate?.Invoke(this, _state);
 	}
-
 	/// <summary>Download and save a link</summary>
 	/// <param name="link">The link to download</param>
 	/// <param name="progress_updater">Recieves callback to update the download progress</param>
@@ -134,7 +138,8 @@ where AppState : AppViewState, new()
 					cancellationToken.ThrowIfCancellationRequested();
 				}
 				_offlineBibles.Add(desc);
-				SaveAssetLog();
+				_state.CurrentAppState = AppViewState.State.BiblesUpdated;
+				SaveAssetLog(); // OnUpdate invoked here
 			}
 			catch (Exception ex)
 			{
@@ -157,19 +162,22 @@ where AppState : AppViewState, new()
 		if (__lock.Wait(5000))
 		{
 			bool result = _offlineBibles.Remove(descriptor);
-			if (result) { SaveAssetLog(); }
-			Directory.Delete(BibleDirectoryPath(descriptor), true);
+			if (result)
+			{
+				Directory.Delete(BibleDirectoryPath(descriptor), true);
+				_state.CurrentAppState = AppViewState.State.BiblesUpdated;
+				SaveAssetLog(); // OnUpdate invoked here
+			}
 			__lock.Release();
 			return result;
 		}
 		else { return false; }
 	}
-
 	/// <summary>Fetches the entire book</summary>
 	/// <param name="bible">The bible from which the book is to be loaded</param>
 	/// <param name="book">The book to load</param>
 	/// <returns>The book of the bible</returns>
-	protected Book LoadBook(BibleDescriptor bible, BibleBook book) =>
+	protected virtual Book LoadBook(BibleDescriptor bible, BibleBook book) =>
 		JsonSerializer.Deserialize<Book>(
 			File.ReadAllText(
 				BibleBookPath(bible, book)));
@@ -208,6 +216,8 @@ where AppState : AppViewState, new()
 				range,
 				onProgressUpdate: progress_updater,
 				ct: cancellationToken));
+			_state.CurrentAppState = AppViewState.State.SearchUpdated;
+			OnUpdate?.Invoke(this, _state);
 			return true;
 		}
 		else { return false; }
@@ -227,12 +237,10 @@ where AppState : AppViewState, new()
 		{
 			try
 			{
-				Book value;
 				if (book == BibleBook.NULL) { book = bible.RegionalName.First().Key; }
-				if (bible == _cache.bible && book == _cache.book) { value = _cache.value; }
-				else
+				if (bible != _cache.bible || book != _cache.book)
 				{
-					value = _cache.value = LoadBook(bible, book);
+					_cache.value = LoadBook(bible, book);
 					_cache.book = book;
 					if (bible != _cache.bible)
 					{
@@ -241,11 +249,13 @@ where AppState : AppViewState, new()
 					}
 				}
 				if (chapter == 0) chapter = 1;
-				else if (chapter > value.Chapter.Count) chapter = (byte)value.Chapter.Count;
-				_state.ReadState.CurrentChapterContent = value[chapter];
+				else if (chapter > _cache.value.Chapter.Count) chapter = (byte)_cache.value.Chapter.Count;
+				_state.ReadState.CurrentChapterContent = _cache.value[chapter];
 				_state.ReadState.CurrentSelectedBook = book;
 				_state.ReadState.CurrentSelectedChapter = chapter;
-				_state.ReadState.CurrentBookChapterCount = (byte)value.Chapter.Count;
+				_state.ReadState.CurrentBookChapterCount = (byte)_cache.value.Chapter.Count;
+				_state.CurrentAppState = AppViewState.State.ChapterLoaded;
+				OnUpdate?.Invoke(this, _state);
 			}
 			catch { return false; }
 			finally { __lock.Release(); }
@@ -255,7 +265,7 @@ where AppState : AppViewState, new()
 	}
 	/// <summary>Fetches the available download links and populates the `_downloadLinks` List</summary>
 	/// <returns>If an exception is caught, it is returned, otherwise returns null</returns>
-	public Exception? RefreshDownloadLinks()
+	public virtual Exception? RefreshDownloadLinks()
 	{
 		Exception? exp = null;
 		try
@@ -264,13 +274,15 @@ where AppState : AppViewState, new()
 			_downloadLinks.AddRange(
 				BibleLink.GetAllUrlsFromWebsite(quiet_return: false));
 			_state.ContentState.LastRefreshed = DateTime.Now;
+			_state.CurrentAppState = AppViewState.State.DownloadLinksUpdated;
+			OnUpdate?.Invoke(this, _state);
 		}
 		catch (Exception ex) { exp = ex; }
 		return exp;
 	}
 	/// <summary>Deletes all configuration files for this app.<br/><br/>Close your application immiedatedly after this method is called</summary>
 	/// <returns>True if all files were deleted successfully. Otherwise false</returns>
-	public bool DeleteAllData()
+	public virtual bool DeleteAllData()
 	{
 		if (__lock.Wait(5000))
 		{
@@ -281,10 +293,15 @@ where AppState : AppViewState, new()
 				{
 					Directory.Delete(BibleDirectoryPath(b), true);
 				}
+				_offlineBibles.Clear();
+				_state.CurrentAppState = AppViewState.State.Uninitialized;
+				OnUpdate?.Invoke(this, _state);
+				__lock.Dispose();
+				__lock = null!; // Make lock unusable for this object
 				return true;
 			}
 			catch { return false; }
-			finally { __lock.Release(); }
+			finally { __lock?.Release(); } // If process failed due to some exception, __lock will not be disposed, and thus it needs to be released
 		}
 		else { return false; }
 	}

@@ -290,10 +290,12 @@ public class Program
 					Console.WriteLine("Delete process skipped.");
 					break;
 				}
-				App.DeleteAllData();
-				Console.WriteLine("All assets removed");
-				ExitPressed = true;
-
+				if (App.DeleteAllData())
+				{
+					Console.WriteLine("All assets removed");
+					ExitPressed = true;
+				}
+				else { throw new Exception("Failed to clear assets"); }
 				break;
 			default: Console.WriteLine("Returning to main menu"); break;
 		}
@@ -363,7 +365,7 @@ public class Program
 			PrintVerse(
 				result.Reference.Book,
 				result.Reference.Chapter,
-				result.Reference.Verse, 
+				result.Reference.Verse,
 				result.VerseContent);
 		}
 	}

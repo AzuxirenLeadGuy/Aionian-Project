@@ -79,22 +79,18 @@ public readonly record struct BibleLink : IComparable<BibleLink>, IEquatable<Bib
 							"Unable to parse data from online dataset");
 					string url = resourceSite + responsestring[0];
 					ulong size = ulong.Parse(responsestring[1]);
-					bool aionianEdition = responsestring[0].EndsWith(
+					bool ae = responsestring[0].EndsWith(
 						"Aionian-Edition.noia");
 					string[] tl = responsestring[0].Replace(
 						"---",
 						"|").Split(
 							'|');
-					string language = tl[1];
+					string lg = tl[1];
 					string title = tl[2];
 					links.Add(
 						new Listing()
 						{
-							Link = new BibleLink(
-								title,
-								language,
-								url,
-								aionianEdition),
+							Link = new BibleLink(title,lg,url,ae),
 							Bytes = size
 						});
 				}

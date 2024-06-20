@@ -7,6 +7,24 @@ namespace AionianApp.ViewStates;
 /// <summary>Represents a ViewState of the app at any given instance</summary>
 public class AppViewState
 {
+	/// <summary>The various states an Aionian app can be in</summary>
+	public enum State : byte
+	{
+		/// <summary>This application is not connected to its viewmodel</summary>
+		Uninitialized,
+		/// <summary>This application is just been connected to its viewmodel</summary>
+		Initialized,
+		/// <summary>This application has just loaded a chapter, updating its ReadState contnet</summary>
+		ChapterLoaded,
+		/// <summary>The available bible list has been updated (added or deleted)</summary>
+		BiblesUpdated,
+		/// <summary>The available download list has been updated</summary>
+		DownloadLinksUpdated,
+		/// <summary>The search results list has been updated</summary>
+		SearchUpdated,
+	}
+	/// <summary>The state of the ViewModel since the last command/request</summary>
+	public State CurrentAppState { internal set; get; }
 	/// <summary>Current ViewState for bible reading</summary>
 	public ReadViewState ReadState;
 	/// <summary>Current ViewState for content management</summary>
@@ -46,5 +64,6 @@ public class AppViewState
 		};
 		CurrentLoadedBible = default;
 		RootDir = "";
+		CurrentAppState = State.Uninitialized;
 	}
 }
