@@ -1,69 +1,52 @@
 using Aionian;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace AionianApp.ViewStates;
 /// <summary>Represents a ViewState of the app at any given instance</summary>
 public class AppViewState
 {
-	/// <summary>The various states an Aionian app can be in</summary>
-	public enum State : byte
-	{
-		/// <summary>This application is not connected to its viewmodel</summary>
-		Uninitialized,
-		/// <summary>This application is just been connected to its viewmodel</summary>
-		Initialized,
-		/// <summary>This application has just loaded a chapter, updating its ReadState contnet</summary>
-		ChapterLoaded,
-		/// <summary>The available bible list has been updated (added or deleted)</summary>
-		BiblesUpdated,
-		/// <summary>The available download list has been updated</summary>
-		DownloadLinksUpdated,
-		/// <summary>The search results list has been updated</summary>
-		SearchUpdated,
-	}
-	/// <summary>The state of the ViewModel since the last command/request</summary>
-	public State CurrentAppState { internal set; get; }
 	/// <summary>Current ViewState for bible reading</summary>
-	public ReadViewState ReadState;
+	protected internal ReadViewState _readState;
 	/// <summary>Current ViewState for content management</summary>
-	public ContentViewState ContentState;
+	protected internal ContentViewState _contentState;
 	/// <summary>Current ViewState for bible search</summary>
-	public SearchViewState SearchState;
-	/// <summary>The list of bible names available</summary>
-	public List<BibleDescriptor> AvailableBibles { internal set; get; }
+	protected internal SearchViewState _searchState;
 	/// <summary>The directory where all data is stored</summary>
-	public string RootDir;
-	/// <summary>The currently loaded bible name</summary>
-	public BibleDescriptor CurrentLoadedBible { internal set; get; }
-	/// <summary>The names of the currently loaded bible books</summary>
-	public IEnumerable<(BibleBook, string)> CurrentlyLoadedBookNames =>
-		CurrentLoadedBible.RegionalName.Select(x => (x.Key, x.Value));
-	/// <summary>If true, bible content is loaded. Otherwise false</summary>
-	public bool IsLoaded => CurrentLoadedBible != BibleDescriptor.Empty;
+	public readonly string RootDir;
 	/// <summary>Constructs a new ViewState instance</summary>
-	public AppViewState()
+	public AppViewState(
+		List<BibleDescriptor> offline_bibles,
+		List<SearchedVerse> search_list,
+		List<Listing> online_bibles,
+		string root_dir
+	)
 	{
-		AvailableBibles = new();
-		ContentState = new()
+		_contentState = new()
 		{
-			AvailableLinks = Array.Empty<Listing>(),
+			AvailableLinks = online_bibles,
 			LastRefreshed = DateTime.MinValue,
+			OfflineBibles = offline_bibles,
 		};
-		SearchState = new()
+		_searchState = new()
 		{
-			FoundReferences = Array.Empty<SearchedVerse>(),
+			FoundReferences = search_list
 		};
-		ReadState = new()
+		_readState = new()
 		{
 			CurrentChapterContent = new(),
-			CurrentSelectedBook = 0,
-			CurrentSelectedChapter = 1,
+			CurrentSelectedChapter = 0,
+			LoadedBible = BibleDescriptor.Empty,
+			AvailableBibles = offline_bibles,
 			CurrentBookChapterCount = 0,
+			CurrentSelectedBook = BibleBook.NULL,
 		};
-		CurrentLoadedBible = default;
-		RootDir = "";
-		CurrentAppState = State.Uninitialized;
+		RootDir = root_dir;
 	}
+	/// <summary>The state of the bible reading view</summary>
+	public ReadViewState ReadState => _readState;
+	/// <summary>The state of the bible search view</summary>
+	public SearchViewState SearchState => _searchState;
+	/// <summary>The state of the content manager view</summary>
+	public ContentViewState ContentState => _contentState;
 }

@@ -8,7 +8,7 @@ using System.Linq;
 namespace AionianApp.Terminal;
 public class Program
 {
-	public static readonly AppViewModel<AppViewState> App = new();
+	public static readonly AppViewModel App = new();
 	public bool ExitPressed = false;
 	public static void Main() => new Program().Run();
 	private static void PrintSep()
@@ -44,10 +44,10 @@ public class Program
 		AppViewState _state = App.State;
 		Console.WriteLine($"Application initialized at {_state.RootDir}");
 		//Initialization Complete
-		if (_state.AvailableBibles.Count == 0)
+		if (_state.ReadState.AvailableBibles.Count == 0)
 		{
 			AssetManagement();
-			if (_state.AvailableBibles.Count == 0)
+			if (_state.ReadState.AvailableBibles.Count == 0)
 			{
 				PrintError("No Default Bible selected. Quitting Application");
 				return;
@@ -82,15 +82,16 @@ public class Program
 		Console.WriteLine("Loading Available Bibles. Please Wait...");
 		DisplayAvailableBibles();
 		Console.WriteLine("\nEnter the bible to load: ");
-		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > _state.AvailableBibles.Count)
+		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > _state.ReadState.AvailableBibles.Count)
 		{
 			PrintError("Invalid Input recieved!");
 			return;
 		}
-		App.LoadBibleChapter(_state.AvailableBibles[--bible]);
+		BibleDescriptor selectedbible = _state.ReadState.AvailableBibles[--bible];
+		App.LoadBibleChapter(selectedbible);
 		_state = App.State;
 		List<string> allBookNames = new();
-		(BibleBook BookVal, string Name)[] books_list = _state.CurrentlyLoadedBookNames.ToArray();
+		(BibleBook BookVal, string Name)[] books_list = _state.ReadState.AvailableBooksNames.Select(x => (x.Key, x.Value)).ToArray();
 		int maxlength = 0, sno = 0;
 		foreach ((BibleBook _, string name) in books_list)
 		{
@@ -127,8 +128,7 @@ public class Program
 		}
 		byte currentChapter;
 		BibleBook currentBook = books_list[bookid - 1].BookVal;
-		BibleDescriptor desc = _state.AvailableBibles[bible];
-		App.LoadBibleChapter(desc, currentBook);
+		App.LoadBibleChapter(selectedbible, currentBook);
 		int len = App.State.ReadState.CurrentBookChapterCount;
 		if (len == 1) { currentChapter = 1; }
 		else
@@ -141,7 +141,7 @@ public class Program
 				PrintError("Invalid Chapter! Try again...");
 			}
 		}
-	sr: bool fetching = App.LoadBibleChapter(desc, currentBook, currentChapter);
+	sr: bool fetching = App.LoadBibleChapter(selectedbible, currentBook, currentChapter);
 		if (!fetching) { PrintError("Could not fetch resources!"); return; }
 		_state = App.State;
 		currentChapter = _state.ReadState.CurrentSelectedChapter;
@@ -192,7 +192,7 @@ public class Program
 		{
 			int choice = 1;
 			ConsoleTable table = new("ID", "Title", "Language", "Version");
-			foreach (BibleDescriptor link in _state.AvailableBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
+			foreach (BibleDescriptor link in _state.ContentState.OfflineBibles) _ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 			table.Write();
 		}
 		void DisplayChapter(Dictionary<byte, string> chapter, string shortbookname, byte chapterno)
@@ -207,7 +207,7 @@ public class Program
 	public void AssetManagement()
 	{
 		AppViewState _state = App.State;
-		if (_state.AvailableBibles.Count == 0) { PrintError("This program requires at least one bible to be installed. Please Install at least once"); }
+		if (_state.ContentState.OfflineBibles.Count == 0) { PrintError("This program requires at least one bible to be installed. Please Install at least once"); }
 		else
 		{
 			Console.WriteLine("Displaying Installed bibles: ");
@@ -235,7 +235,7 @@ public class Program
 						continue;
 					}
 					BibleLink link = list[--x];
-					if (_state.AvailableBibles.Any(x => x.Equals(link)))
+					if (_state.ContentState.OfflineBibles.Any(x => link.Equals(x)))
 					{
 						Console.WriteLine($"Bible {link} already exists");
 						continue;
@@ -267,12 +267,12 @@ public class Program
 					"Enter the ID(s) of the bible to remove (Multiple IDs are to be separted by space")
 					.Split(' ', StringSplitOptions.RemoveEmptyEntries))
 				{
-					if (!int.TryParse(Id, out int x) || x < 1 || x > _state.AvailableBibles.Count)
+					if (!int.TryParse(Id, out int x) || x < 1 || x > _state.ContentState.OfflineBibles.Count)
 					{
 						Console.WriteLine($"Ignoring Invalid input {Id}");
 						break;
 					}
-					BibleDescriptor link = _state.AvailableBibles[--x];
+					BibleDescriptor link = _state.ContentState.OfflineBibles[--x];
 					if (App.DeleteBible(link))
 					{
 						files++;
@@ -303,7 +303,7 @@ public class Program
 		{
 			int choice = 1;
 			ConsoleTable table = new("ID", "Title", "Language", "Version");
-			foreach (BibleDescriptor link in _state.AvailableBibles)
+			foreach (BibleDescriptor link in _state.ContentState.OfflineBibles)
 				_ = table.AddRow(choice++, link.Title, link.Language, link.AionianEdition ? "Aionian" : "Standard");
 			table.Write();
 		}
@@ -322,17 +322,15 @@ public class Program
 			}
 			table.Options.EnableCount = false;
 			table.Write();
-			List<BibleLink> links = new();
-			foreach (Listing item in results) links.Add(item.Link);
-			return links.ToArray();
+			return results.Select(x => x.Link).ToArray();
 		}
 	}
 	private static void WordSearcher()
 	{
 		Console.WriteLine("\nEnter the bible to perform search on: ");
 		AppViewState _state = App.State;
-		DisplayAvailableBibles(_state.AvailableBibles);
-		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > _state.AvailableBibles.Count)
+		DisplayAvailableBibles(_state.ContentState.OfflineBibles);
+		if (!int.TryParse(Console.ReadLine(), out int bible) || bible < 1 || bible > _state.ContentState.OfflineBibles.Count)
 		{
 			Console.WriteLine("Invalid input. Aborting process..");
 			return;
@@ -352,7 +350,7 @@ public class Program
 		SearchMode mode = input == '1' ? SearchMode.MatchAnyWord : (input == '2' ? SearchMode.MatchAllWords : SearchMode.Regex);
 		SearchQuery search;
 		try { search = new(inputline, mode); } catch (Exception ex) { PrintError($"Invalid input.\n{ex}"); return; }
-		BibleDescriptor desc = _state.AvailableBibles[--bible];
+		BibleDescriptor desc = _state.ContentState.OfflineBibles[--bible];
 		App.LoadBibleChapter(desc);
 		Console.WriteLine("Starting Search. Please wait...");
 		if (!App.SearchVerses(desc, search, BibleBook.NULL, BibleBook.NULL))

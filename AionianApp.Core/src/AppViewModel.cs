@@ -13,13 +13,12 @@ using System.Threading.Tasks;
 namespace AionianApp;
 
 /// <summary>The functionalities that an AionianApp ViewModel should provide</summary>
-public class AppViewModel<AppState> : IViewModel<AppState>
-where AppState : AppViewState, new()
+public class AppViewModel
 {
 	/// <summary>Fetches the data to populate the view</summary>
-	public AppState State => _state;
+	public AppViewState State => _state;
 	/// <summary>The data that can be used to populate the view</summary>
-	protected AppState _state = new();
+	protected AppViewState _state;
 	/// <summary>The object to lock with</summary>
 	protected SemaphoreSlim __lock = new(1, 1);
 	/// <summary>The path of the config directory</summary>
@@ -32,10 +31,10 @@ where AppState : AppViewState, new()
 	protected readonly List<Listing> _downloadLinks = new();
 	/// <summary>The bibles available to the app</summary>
 	protected List<BibleDescriptor> _offlineBibles = new();
-	/// <summary>The cache to load the chapterwise data from</summary>
-	protected (BibleDescriptor bible, BibleBook book, Book value) _cache;
+	/// <summary>The book loaded in cache</summary>
+	internal Book LoadedBook;
 	/// <inheritdoc/>
-	public event EventHandler<AppState>? OnUpdate;
+	public event EventHandler<AppViewState>? OnUpdate;
 	/// <summary>Loads the App from the content data in the Config directory</summary>
 	/// <param name="path">The path of the config directory</param>
 	public AppViewModel(string path)
@@ -56,13 +55,11 @@ where AppState : AppViewState, new()
 			) ?? new();
 		}
 		else { SaveAssetLog(); }
-		_cache = (default, default, default);
-		_state = new();
-		_state.AvailableBibles.AddRange(_offlineBibles);
-		_state.ContentState.AvailableLinks = _downloadLinks;
-		_state.SearchState.FoundReferences = _searchList;
-		_state.RootDir = _configDir;
-		_state.CurrentAppState = AppViewState.State.Initialized;
+		_state = new(
+			_offlineBibles,
+			_searchList,
+			_downloadLinks,
+			_configDir);
 		OnUpdate?.Invoke(this, _state);
 	}
 	/// <summary>Loads the App from the content data in the Config directory taken as the Local Application Data folder</summary>
@@ -76,25 +73,20 @@ where AppState : AppViewState, new()
 	/// <param name="book">The book value to load</param>
 	/// <returns>The path of the resource</returns>
 	protected virtual string BibleBookPath(BibleDescriptor desc, BibleBook book) => $"{BibleDirectoryPath(desc)}/{(byte)book}.json";
-	private static JsonSerializerOptions DefaultOptions() => new()
+	/// <summary>The serialization options used by the JSON parser</summary>
+	protected virtual JsonSerializerOptions DefaultOptions() => new()
 	{
 		AllowTrailingCommas = true,
 		WriteIndented = true,
 		IncludeFields = true
 	};
 	/// <summary>Save the data within OfflineBibles List</summary>
-	protected virtual void SaveAssetLog()
-	{
-		File.WriteAllText(
-			ConfigFile,
-			JsonSerializer.Serialize<List<BibleDescriptor>>(
-				_offlineBibles,
-				DefaultOptions()
-			));
-		_state.AvailableBibles.Clear();
-		_state.AvailableBibles.AddRange(_offlineBibles);
-		OnUpdate?.Invoke(this, _state);
-	}
+	protected virtual void SaveAssetLog() => File.WriteAllText(
+		ConfigFile,
+		JsonSerializer.Serialize<List<BibleDescriptor>>(
+			_offlineBibles,
+			DefaultOptions()
+		));
 	/// <summary>Download and save a link</summary>
 	/// <param name="link">The link to download</param>
 	/// <param name="progress_updater">Recieves callback to update the download progress</param>
@@ -138,8 +130,8 @@ where AppState : AppViewState, new()
 					cancellationToken.ThrowIfCancellationRequested();
 				}
 				_offlineBibles.Add(desc);
-				_state.CurrentAppState = AppViewState.State.BiblesUpdated;
-				SaveAssetLog(); // OnUpdate invoked here
+				SaveAssetLog();
+				OnUpdate?.Invoke(this, _state);
 			}
 			catch (Exception ex)
 			{
@@ -165,8 +157,8 @@ where AppState : AppViewState, new()
 			if (result)
 			{
 				Directory.Delete(BibleDirectoryPath(descriptor), true);
-				_state.CurrentAppState = AppViewState.State.BiblesUpdated;
-				SaveAssetLog(); // OnUpdate invoked here
+				SaveAssetLog();
+				OnUpdate?.Invoke(this, _state);
 			}
 			__lock.Release();
 			return result;
@@ -199,7 +191,7 @@ where AppState : AppViewState, new()
 	{
 		_searchList.Clear();
 		if (bible.RegionalName.Count == 0) { return true; }
-		if (_cache.bible != bible)
+		if (_state._readState.LoadedBible != bible)
 			LoadBibleChapter(bible);
 		if (cancellationToken == default) cancellationToken = CancellationToken.None;
 		if (start == BibleBook.NULL) { start = bible.RegionalName.First().Key; }
@@ -216,7 +208,6 @@ where AppState : AppViewState, new()
 				range,
 				onProgressUpdate: progress_updater,
 				ct: cancellationToken));
-			_state.CurrentAppState = AppViewState.State.SearchUpdated;
 			OnUpdate?.Invoke(this, _state);
 			return true;
 		}
@@ -238,23 +229,24 @@ where AppState : AppViewState, new()
 			try
 			{
 				if (book == BibleBook.NULL) { book = bible.RegionalName.First().Key; }
-				if (bible != _cache.bible || book != _cache.book)
+				if (
+					bible != _state._readState.LoadedBible ||
+					book != _state._readState.CurrentSelectedBook)
 				{
-					_cache.value = LoadBook(bible, book);
-					_cache.book = book;
-					if (bible != _cache.bible)
+					if (bible != _state._readState.LoadedBible)
 					{
-						_cache.bible = _state.CurrentLoadedBible = bible;
+						_state._readState.LoadedBible = bible;
+						_state._readState.AvailableBooksNames = bible.RegionalName;
 						_searchList.Clear();
 					}
+					LoadedBook = LoadBook(bible, book);
+					_state._readState.CurrentSelectedBook = LoadedBook.CurrentBibleBook;
+					_state._readState.CurrentBookChapterCount = (byte)LoadedBook.Chapter.Count;
 				}
 				if (chapter == 0) chapter = 1;
-				else if (chapter > _cache.value.Chapter.Count) chapter = (byte)_cache.value.Chapter.Count;
-				_state.ReadState.CurrentChapterContent = _cache.value[chapter];
-				_state.ReadState.CurrentSelectedBook = book;
-				_state.ReadState.CurrentSelectedChapter = chapter;
-				_state.ReadState.CurrentBookChapterCount = (byte)_cache.value.Chapter.Count;
-				_state.CurrentAppState = AppViewState.State.ChapterLoaded;
+				else if (chapter > _state._readState.CurrentBookChapterCount) chapter = _state._readState.CurrentBookChapterCount;
+				_state._readState.CurrentChapterContent = LoadedBook[chapter];
+				_state._readState.CurrentSelectedChapter = chapter;
 				OnUpdate?.Invoke(this, _state);
 			}
 			catch { return false; }
@@ -273,8 +265,7 @@ where AppState : AppViewState, new()
 			_downloadLinks.Clear();
 			_downloadLinks.AddRange(
 				BibleLink.GetAllUrlsFromWebsite(quiet_return: false));
-			_state.ContentState.LastRefreshed = DateTime.Now;
-			_state.CurrentAppState = AppViewState.State.DownloadLinksUpdated;
+			_state._contentState.LastRefreshed = DateTime.Now;
 			OnUpdate?.Invoke(this, _state);
 		}
 		catch (Exception ex) { exp = ex; }
@@ -294,7 +285,6 @@ where AppState : AppViewState, new()
 					Directory.Delete(BibleDirectoryPath(b), true);
 				}
 				_offlineBibles.Clear();
-				_state.CurrentAppState = AppViewState.State.Uninitialized;
 				OnUpdate?.Invoke(this, _state);
 				__lock.Dispose();
 				__lock = null!; // Make lock unusable for this object
